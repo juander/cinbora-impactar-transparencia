@@ -1,43 +1,39 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { MulterRequest } from '../utils/customTypes';
 import * as fileService from '../services/fileService';
-import { validateFile } from '../utils/validateFile';
 
-// Rota POST - Criar arquivo
-export const createFile = (req: Request, res: Response) => {
-  const { name, path, mimetype, size, userId } = req.body;
-
-  // Validação simples
-  const validation = validateFile(name, path, mimetype, size, userId);
-  if (!validation.isValid) {
-    return res.status(400).json({ message: validation.message });
+export const createFile = (req: MulterRequest, res: Response): void => {
+  if (!req.file) {
+    res.status(400).json({ message: 'Arquivo não enviado' });
+    return;
   }
 
-  // Chama o serviço para criar o arquivo
-  const newFile = fileService.createFile(name, path, mimetype, size, userId);
+  const newFile = fileService.createFile(req.file);
 
-  return res.status(201).json({
+  res.status(201).json({
     message: 'Arquivo criado com sucesso!',
     file: newFile,
   });
 };
 
-// Rota GET - Listar arquivos
-export const listFiles = (req: Request, res: Response) => {
+export const listFiles = (req: MulterRequest, res: Response): void => {
   const files = fileService.listFiles();
-  return res.status(200).json(files);
+  res.status(200).json(files);
 };
 
-// Rota DELETE - Deletar arquivo por ID
-export const deleteFile = (req: Request, res: Response) => {
-  const { id } = req.params;
+export const deleteFile = (req: MulterRequest, res: Response): void => {
+  const { filename } = req.params;  // Pega o 'filename' da URL
 
-  const deletedFile = fileService.deleteFile(Number(id));
+  const deletedFile = fileService.deleteFile(filename);  // Chama o serviço para excluir o arquivo
+
   if (!deletedFile) {
-    return res.status(404).json({ message: `Arquivo com ID ${id} não encontrado.` });
+    res.status(404).json({ message: `Arquivo ${filename} não encontrado.` });  // Caso o arquivo não seja encontrado
+    return;
   }
 
-  return res.status(200).json({
-    message: `Arquivo de ID ${id} deletado com sucesso!`,
+  res.status(200).json({
+    message: `Arquivo ${filename} deletado com sucesso!`,  // Resposta de sucesso
     file: deletedFile,
   });
 };
+

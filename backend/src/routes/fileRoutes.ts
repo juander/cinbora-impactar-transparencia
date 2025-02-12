@@ -1,11 +1,30 @@
 import { Router } from 'express';
-import * as fileController from '../controllers/fileController';
+import { createFile, listFiles, deleteFile } from '../controllers/fileController';
+import multer from 'multer';
+import { MulterRequest } from '../utils/customTypes';
+import path from 'path';
+
+const uploadDir = path.join(__dirname, '../uploads'); // Caminho absoluto para o diretório de uploads
+
+// Configuração do multer com armazenamento personalizado
+const upload = multer({
+  dest: uploadDir, // Alinhando o diretório com o uploadDir
+});
 
 const router = Router();
 
-// Definindo as rotas e passando os controladores corretamente
-router.post('/', fileController.createFile); // Usando o controlador para POST
-router.get('/', fileController.listFiles); // Usando o controlador para GET
-router.delete('/:id', fileController.deleteFile); // Usando o controlador para DELETE
+// Middleware para ajustar o tipo MulterRequest
+const adaptMulterRequest = (
+    handler: (req: MulterRequest, res: any) => void
+  ): ((req: any, res: any) => void) => {
+    return (req, res) => {
+      handler(req as MulterRequest, res);
+    };
+  };
+
+// Rotas para manipulação de arquivos
+router.post('/', upload.single('file'), adaptMulterRequest(createFile));
+router.get('/', adaptMulterRequest(listFiles));
+router.delete('/:filename', adaptMulterRequest(deleteFile));
 
 export default router;
