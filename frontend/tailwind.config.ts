@@ -9,6 +9,15 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		keyframes: {
+			slideUp: {
+			  '0%': { transform: 'translateY(100px)', opacity: '0' },
+			  '100%': { transform: 'translateY(0)', opacity: '1' },
+			},
+		  },
+		  animation: {
+			'slide-up': 'slideUp 0.8s ease-out forwards',
+		  },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
