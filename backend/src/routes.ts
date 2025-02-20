@@ -1,13 +1,24 @@
-import express from 'express';
-import { getUsers, createUser, getOngData } from './controller';
+import { FastifyInstance, FastifyPluginOptions, FastifyRequest, FastifyReply } from "fastify";
+import { CreateUserController } from "./controllers/createUserController";
+import { listUsersController } from "./controllers/listUsersControoller";
+import { DeleleUserController } from "./controllers/deleteUserController";
+import { loginAPIController } from "./controllers/loginAPIController";
 
-const router = express.Router();
+export async function routes(fastify: FastifyInstance, options: FastifyPluginOptions) {
 
-// Rota para buscar usuários
-router.get('/users', getUsers);
+  fastify.get('/users', async (request: FastifyRequest, reply: FastifyReply) => {
+    return new listUsersController().handle(request, reply);
+  });
 
-// Rota para criar usuário
-router.post('/users', createUser);
+  fastify.post('/user', async (request: FastifyRequest, reply: FastifyReply) => {
+    return new CreateUserController().handle(request, reply);
+  });
 
-router.post('/getOngData', getOngData);
-export default router;
+  fastify.delete('/user', async (request: FastifyRequest, reply: FastifyReply) => {
+    return new DeleleUserController().handle(request, reply);
+  });
+
+  fastify.post('/login', async (request: FastifyRequest, reply: FastifyReply) => {
+    return new loginAPIController().handle(request, reply);
+  });
+}

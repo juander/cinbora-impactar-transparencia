@@ -14,7 +14,12 @@ datasource db {
 }
 
 model User {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  email String @unique
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String @unique
+  status      Boolean
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @default(now())
+
+  @@map("users")
 }
