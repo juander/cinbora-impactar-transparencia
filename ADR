@@ -1,0 +1,44 @@
+ADR-1: Escolha da linguagem utilizada->
+    -Typescript
+      1: Facilita a detecção de erros
+      2: Compatibilidade boa com o Node.js
+      3: Flexibilidade e versatilidade da linguagem
+
+    -React
+      1: Divide a interface em componentes reutilizáveis
+      2: Permite a escrita de Html dentro do JavaScript
+      3: Muitas bibliotecas e material fácil de encontrar e estudar
+
+ADR-2: Escolha do Banco de dados->
+    -MongoDB
+      1: Suporta documentos dentro de outros, permitindo armazenar dados sem criar tabelas adicionais
+      2: Facilidade de uso e de encontrar materias
+
+ADR-3: Uso de frameworks->
+    -Tailwind
+      1: Otimização na criação de interfaces, facilita a compreensão e escrita
+      2: Evita a criação de de arquivos separados
+
+    -Next.js
+      1: Criação de endpoints de API dentro do frontend
+      2: Melhora o carregamento de imagens
+      3: Cria rotas automáticas
+
+ADR-4: Escolha da Plataforma de Deploy
+    -Vercel
+      1: Integração nativa com Next.js, facilitando o deploy.
+      2: Otimiza o carregamento e melhorar a performance.
+
+ADR-5:Organização do Código e Estrutura do Projeto
+    -Estrutura baseada no App Router do Next.js
+      1: Uso da pasta app/ para organização de rotas seguindo a estrutura do Next.js.
+      2: Separação dos componentes reutilizáveis na pasta components/.
+      3: Uso da pasta lib/, garantindo melhor organização e reuso de código.
+
+ADR-6: ADR-10: Escolha do ORM para Interação com o Banco de Dados
+    -Prisma 
+      1: Facilidade de uso e tipagem forte: Prisma fornece suporte completo para TypeScript
+      2: Integração com o Banco de Dados, Prisma permite interagir com MongoDB de forma estruturada
+      3: Permite utilizar Next.js  para manipular dados do banco
+    
+    
