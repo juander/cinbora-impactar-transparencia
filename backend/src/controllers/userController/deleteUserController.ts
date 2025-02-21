@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify"
-import { DeleleUserService } from "../services/deleteUserService"
+import { DeleleUserService } from "../../services/userService/deleteUserService"
 
 class DeleleUserController{
     async handle(request: FastifyRequest, reply: FastifyReply){
