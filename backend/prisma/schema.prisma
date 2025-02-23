@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,4 +16,40 @@ model User {
   updated_at  DateTime? @default(now())
 
   @@map("users")
+}
+
+model Ngo {
+  id                          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name                        String
+  description                 String?
+  is_formalized               Boolean
+  start_year                  Int
+  contact_phone               String?
+  instagram_link              String?
+  x_link                      String?
+  facebook_link               String?
+  pix_qr_code_link            String?
+  gallery_images_url          String[] // URLs das imagens da galeria
+  skills                      Json?    // Habilidades (armazenadas como JSON)
+  causes                      Json?    // Causas (armazenadas como JSON)
+  sustainable_development_goals Json?  // Objetivos de desenvolvimento sustentável (armazenados como JSON)
+  files                       FileMetadata[] // Arquivos associados à ONG
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@map("ngos") // Nome da coleção no MongoDB
+}
+
+model FileMetadata {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  nome      String
+  tipo      String   // Tipo MIME do arquivo (ex: 'application/pdf')
+  tamanho   Int      // Tamanho do arquivo em bytes
+  ngoId     String   @db.ObjectId // ID da ONG associada
+  ngo       Ngo      @relation(fields: [ngoId], references: [id])
+  gridFSId  String   // ID do arquivo no GridFS
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("file_metadata") // Nome da coleção no MongoDB
 }
