@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { GridFSBucket } from "mongodb";
-import prismaClient from "../../prisma";
+import prismaClient from "../../prisma/prismaClient";
 import { connectToDatabase } from "../../config/mongoClient";
 
 declare module "fastify" {

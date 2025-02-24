@@ -1,4 +1,4 @@
-import prismaClient from "../../prisma"
+import prismaClient from "../../prisma/prismaClient"
 
 class ListUsersService{
     async execute(){
