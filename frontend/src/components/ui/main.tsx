@@ -23,14 +23,14 @@ export default function Main() {
         opts={{
           align: "start",
         }}
-        className="max-w-7xl mt-16 bg-gray-800"
+        className="max-w-7xl mt-16"
       >
         <CarouselContent>
           {Array.from({ length: 7 }).map((_, index) => (
             <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
               <div className="p-1">
                 <Card>
-                  <CardContent className="flex aspect-square items-center justify-center p-4 bg-red-500">
+                  <CardContent className="flex aspect-square items-center justify-center p-4 bg-gray-800">
                     <span className="text-3xl font-semibold">
                       <Image src={prefeituraLogo} alt="Prefeitura do Recife" />
                     </span>
@@ -53,6 +53,17 @@ export default function Main() {
         indicatorClass="bg-[#2BAFF1]"
         value={62}
       />
+
+      <div className="p-4 w-80 h-64 border-solid border border-[#EAECF0] rounded shadow-2xl">
+          <div className=""><p className="text-[#294BB6] p-2 bg-[#2BAFF1] bg-opacity-20 inline">SAÚDE</p></div>
+          <div>Deseslove</div>
+          <div>      
+            <Progress 
+            className="w-full bg-[#EAECF0]"
+            indicatorClass="bg-[#2BAFF1]"
+            value={62}/>
+          </div>
+        </div>
     </main>
   )
 }
