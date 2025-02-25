@@ -7,10 +7,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 
-import Image from "next/image";
+
 import prefeituraLogo from "../../assets/prefeitura.svg";
 import { Progress } from "@/components/ui/progress"
-
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import shareButton from "../../assets/share.svg";
 
 
 export default function Main() {
@@ -54,15 +56,22 @@ export default function Main() {
         value={62}
       />
 
-      <div className="p-4 w-80 h-64 border-solid border border-white rounded shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)] mb-8">
-          <div className=""><p className="text-sm font-medium text-[#294BB6] px-2 py-1 bg-[#2BAFF1] bg-opacity-20 inline rounded ">SAÚDE</p></div>
+      <div className="flex flex-col justify-between p-4 w-80 h-64 border-solid border border-white rounded shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)] mb-8">
+          <div className=""><p className="inline text-sm font-medium text-[#294BB6] px-2 py-1 bg-[#2BAFF1] bg-opacity-20 rounded">SAÚDE</p></div>
           <div>Deseslove</div>
           <div>    
             <Progress 
             className="w-full bg-[#EAECF0]"
             indicatorClass="bg-[#2BAFF1]"
             value={62}/>
+          
           </div>
+          <hr className="border-solide border borde-gray-500"/>
+          <div className="flex justify-between">
+            <Button className="w-4/5 font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">SAIBA MAIS</Button>
+            <Button variant="default" size="default" className="w-1/12 rounded-full bg-black"><Image className="w-5 h-5" src={shareButton} alt="share"/></Button>
+          </div>
+          <Image className="w-full h-10" src={shareButton} alt="share"/>
         </div>
 
     </main>
