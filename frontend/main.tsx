@@ -23,14 +23,14 @@ export default function Main() {
         opts={{
           align: "start",
         }}
-        className="max-w-7xl mt-16 bg-gray-800"
+        className="max-w-7xl mt-16"
       >
         <CarouselContent>
           {Array.from({ length: 7 }).map((_, index) => (
             <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
               <div className="p-1">
                 <Card>
-                  <CardContent className="flex aspect-square items-center justify-center p-4 bg-red-500">
+                  <CardContent className="flex aspect-square items-center justify-center p-4 bg-gray-800">
                     <span className="text-3xl font-semibold">
                       <Image src={prefeituraLogo} alt="Prefeitura do Recife" />
                     </span>
@@ -50,9 +50,20 @@ export default function Main() {
       
       <Progress 
         className="w-80 mb-20 mt-20 bg-[#EAECF0]"
-        indicatorClass="bg-[#2BAFF1]"
+        indicatorClass="bg[#2BAFF1]"
         value={62}
       />
+
+      <div className="p-4 w-80 h-64 border-solid border border-white rounded shadow-[0_0px_4px_rgba(16,24,40,0.1)]">
+          <div className=""><p className="text-sm font-medium text-[#294BB6] px-2 py-1 bg-[#2BAFF1] bg-opacity-20 inline rounded ">SAÚDE</p></div>
+          <div>Deseslove</div>
+          <div>      
+            <Progress 
+            className="w-full bg-[#EAECF0]"
+            indicatorClass="bg-[#2BAFF1]"
+            value={62}/>
+          </div>
+        </div>
     </main>
   )
 }
