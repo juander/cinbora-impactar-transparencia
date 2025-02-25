@@ -5,18 +5,6 @@ import { DeleleUserController } from "./controllers/userController/deleteUserCon
 import { loginAPIController } from "./controllers/externalAPIController/loginAPIController";
 import { UploadFileController } from "./controllers/fileController/uploadFileController";
 import fastifyMultipart from '@fastify/multipart';
-import upload from "./config/uploadConfig";
-
-function multerToFastify(multerMiddleware: any) {
-  return (req: FastifyRequest, reply: FastifyReply, done: (err?: Error) => void) => {
-    multerMiddleware(req.raw, reply.raw, (err: any) => {
-      if (err) {
-        return done(err);
-      }
-      done();
-    });
-  };
-}
 
 export async function routes(fastify: FastifyInstance, options: FastifyPluginOptions) {
 
@@ -38,7 +26,7 @@ export async function routes(fastify: FastifyInstance, options: FastifyPluginOpt
 
   fastify.register(fastifyMultipart);
 
-  fastify.post('/upload', { preHandler: multerToFastify(upload.single('file')) }, async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/upload', async (request: FastifyRequest, reply: FastifyReply) => {
     return new UploadFileController().handle(request, reply);
   });
 
