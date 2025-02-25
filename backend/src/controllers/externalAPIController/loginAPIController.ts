@@ -16,6 +16,7 @@ class LoginAPIController {
       }
 
       const ngoData = data.ngo;
+      const userData = data.user;
 
       // Verificar se a ONG já existe pelo ID
       let ngo = await prismaClient.ngo.findUnique({
@@ -41,7 +42,23 @@ class LoginAPIController {
         });
       }
 
-      reply.send({ message: data.message, user: data.user, ngo });
+      // Verificar se o usuário já existe pelo email
+      let user = await prismaClient.user.findUnique({
+        where: { email: userData.email }
+      });
+
+      if (!user) {
+        // Criar o usuário no banco apenas se não existir
+        user = await prismaClient.user.create({
+          data: {
+            name: userData.name,
+            email: userData.email,
+            ngoId: ngo.id
+          }
+        });
+      }
+
+      reply.send({ message: data.message, user, ngo });
     } catch (error) {
       console.error("Erro no login:", error);
       reply.status(500).send({ error: "Erro ao processar login" });
