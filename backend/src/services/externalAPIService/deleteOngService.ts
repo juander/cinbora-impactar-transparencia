@@ -1,4 +1,4 @@
-import prismaClient from "../../prisma";
+import prismaClient from "../../infrastructure/prisma";
 
 interface DeleteOngProps {
   id: string;

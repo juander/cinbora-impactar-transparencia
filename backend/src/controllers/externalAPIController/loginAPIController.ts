@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { GetOngDataService } from "../../services/externalAPIService/loginAPIService";
-import prismaClient from "../../prisma";
+import prismaClient from "../../infrastructure/prisma"
 
 class LoginAPIController {
   async handle(request: FastifyRequest, reply: FastifyReply) {
