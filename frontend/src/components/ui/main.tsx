@@ -50,20 +50,21 @@ export default function Main() {
       
       <Progress 
         className="w-80 mb-20 mt-20 bg-[#EAECF0]"
-        indicatorClass="bg-[#2BAFF1]"
+        indicatorClass="bg[#2BAFF1]"
         value={62}
       />
 
-      <div className="p-4 w-80 h-64 border-solid border border-[#EAECF0] rounded shadow-2xl">
-          <div className=""><p className="text-[#294BB6] p-2 bg-[#2BAFF1] bg-opacity-20 inline">SAÚDE</p></div>
+      <div className="p-4 w-80 h-64 border-solid border border-white rounded shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)] mb-8">
+          <div className=""><p className="text-sm font-medium text-[#294BB6] px-2 py-1 bg-[#2BAFF1] bg-opacity-20 inline rounded ">SAÚDE</p></div>
           <div>Deseslove</div>
-          <div>      
+          <div>    
             <Progress 
             className="w-full bg-[#EAECF0]"
             indicatorClass="bg-[#2BAFF1]"
             value={62}/>
           </div>
         </div>
+
     </main>
   )
 }
