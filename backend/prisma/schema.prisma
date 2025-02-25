@@ -7,19 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  email       String @unique
-  status      Boolean
-  created_at  DateTime? @default(now())
-  updated_at  DateTime? @default(now())
-
-  @@map("users")
-}
-
 model Ngo {
-  id                          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                          Int      @id @map("_id")
   name                        String
   description                 String?
   is_formalized               Boolean
@@ -34,10 +23,23 @@ model Ngo {
   causes                      Json?    // Causas (armazenadas como JSON)
   sustainable_development_goals Json?  // Objetivos de desenvolvimento sustentável (armazenados como JSON)
   files                       FileMetadata[] // Arquivos associados à ONG
+  users                       User[]  // Relacionamento com usuários
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
 
   @@map("ngos") // Nome da coleção no MongoDB
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  ngoId     Int
+  ngo       Ngo      @relation(fields: [ngoId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users") // Nome da coleção no MongoDB
 }
 
 model FileMetadata {
@@ -45,7 +47,7 @@ model FileMetadata {
   nome      String
   tipo      String   // Tipo MIME do arquivo (ex: 'application/pdf')
   tamanho   Int      // Tamanho do arquivo em bytes
-  ngoId     String   @db.ObjectId // ID da ONG associada
+  ngoId     Int      // ID da ONG associada
   ngo       Ngo      @relation(fields: [ngoId], references: [id])
   gridFSId  String   // ID do arquivo no GridFS
   createdAt DateTime @default(now())

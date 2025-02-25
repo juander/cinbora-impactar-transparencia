@@ -5,7 +5,7 @@ interface GetOngDataProps {
   password: string;
 }
 
-class GetOngDataService {
+class GetOngDataUseCase {
   async execute({ email, password }: GetOngDataProps) {
     try {
       console.log("Buscando dados externos...");
@@ -34,4 +34,4 @@ class GetOngDataService {
   }
 }
 
-export { GetOngDataService };
+export { GetOngDataUseCase };
