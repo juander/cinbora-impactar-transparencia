@@ -29,12 +29,27 @@ export default function Main() {
       >
         <CarouselContent>
           {Array.from({ length: 7 }).map((_, index) => (
-            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
+            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
               <div className="p-1">
                 <Card>
-                  <CardContent className="flex aspect-square items-center justify-center p-4 bg-gray-800">
-                    <span className="text-3xl font-semibold">
-                      <Image src={prefeituraLogo} alt="Prefeitura do Recife" />
+                  <CardContent className="flex aspect-square items-center justify-center p-4">
+                    <span>
+                        <div className="flex flex-col justify-between p-4 w-80 h-64 border-solid border border-white rounded shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)] mb-8">
+                          <div className=""><p className="inline text-sm font-medium text-[#294BB6] px-2 py-1 bg-[#2BAFF1] bg-opacity-20 rounded">SAÚDE</p></div>
+                          <div>Deseslove</div>
+                          <div>    
+                            <Progress 
+                            className="w-full bg-[#EAECF0]"
+                            indicatorClass="bg-[#2BAFF1]"
+                            value={62}/>
+                          
+                          </div>
+                          <hr className="border-solide border borde-gray-500"/>
+                          <div className="h-12 flex justify-between">
+                            <Button className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">TRANSPARÊNCIA</Button>
+                            <div className="w-2/12 rounded-full bg-[#F2F4F7] flex justify-center content-center items-center "><Image className="w-6 h-6" src={shareButton} alt="share"/></div>
+                          </div>
+                        </div>
                     </span>
                   </CardContent>
                 </Card>
@@ -67,11 +82,10 @@ export default function Main() {
           
           </div>
           <hr className="border-solide border borde-gray-500"/>
-          <div className="flex justify-between">
-            <Button className="w-4/5 font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">SAIBA MAIS</Button>
-            <Button variant="default" size="default" className="w-1/12 rounded-full bg-black"><Image className="w-5 h-5" src={shareButton} alt="share"/></Button>
+          <div className="h-12 flex justify-between">
+            <Button className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">TRANSPARÊNCIA</Button>
+            <div className="w-2/12 rounded-full bg-[#F2F4F7] flex justify-center content-center items-center "><Image className="w-6 h-6" src={shareButton} alt="share"/></div>
           </div>
-          <Image className="w-full h-10" src={shareButton} alt="share"/>
         </div>
 
     </main>
