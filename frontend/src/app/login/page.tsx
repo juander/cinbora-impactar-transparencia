@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
+import boraImpactar from "../../assets/bora_impactar.svg"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -54,15 +56,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900">Login</h2>
-        <p className="text-gray-500 text-center">Acesse sua conta</p>
+    <div className="flex flex-col items-center justify-center min-h-screen max-w-4/5 p-4">
+      <Image src={boraImpactar} alt="bora impactar"/>
+      <div className="p-14 rounded-xl shadow-lg w-full max-w-lg bg-[#00B3FF]">
+        <h2 className="text-2xl font-bold text-center text-white">Entrar</h2>
+        <p className="text-white text-center">Acesse sua Ong</p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Input className="bg-white rounded-xl border-[#D4D7E3]" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input className="bg-white rounded-xl border-[#D4D7E3]" type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Button type="submit" className="w-full bg-[#294BB6] rounded-xl text-white font-bold tracking-widest hover:bg-white hover:text-[#294BB6]" disabled={loading}>
             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : "Entrar"}
           </Button>
         </form>
