@@ -77,7 +77,7 @@ export default function Ongs() {
             ong.name.toLowerCase().includes(searchTerm.toLowerCase())
           )
           .map((ong) => (
-            <div key={ong.id} className="max-w-sm border border-black flex flex-col p-2 mb-4">
+            <div key={ong.id} className="max-w-sm flex flex-col p-2 mb-4 shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)]">
               <h1 className="font-bold mb-2">{ong.name}</h1>
               <p className="mb-2 max-h-48 h-48 overflow-y-scroll">{ong.description}</p>
               <div className="flex mb-2">
