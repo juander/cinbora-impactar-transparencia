@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import shareButton from "../../assets/share.svg"
 import capa from "../../assets/capa.svg"
+import Link from "next/link";
 
 export default function Main() {
   const slides = [
@@ -128,9 +129,11 @@ export default function Main() {
                       </div>
                       <hr className="border-solide border borde-gray-500" />
                       <div className="h-12 flex justify-between">
-                        <Button className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">
-                          TRANSPARÊNCIA
-                        </Button>
+                        <Link className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border" href="/ongs">
+                          <Button className="w-full h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border hover:text-[#294BB6] hover:bg-white">
+                            TRANSPARÊNCIA
+                          </Button>
+                        </Link>
                         <div className="w-2/12 rounded-full bg-[#F2F4F7] flex justify-center items-center">
                           <Image className="w-6 h-6" src={shareButton} alt="share" />
                         </div>

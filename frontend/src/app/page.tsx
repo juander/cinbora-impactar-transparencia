@@ -7,8 +7,10 @@ import instagramIcon from "../assets/insta_icon.svg";
 import dateIcon from "../assets/date_icon.svg";
 import phoneIcon from "../assets/phone_icon.svg";
 import shareButton from "../assets/share.svg";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
 
 interface Ong {
   id: number;
@@ -71,15 +73,15 @@ export default function Ongs() {
         />
       </div>
 
-      <div className="max-w-7xl grid grid-cols-3 m-auto mb-16 gap-2 justify-items-center max-h-[560px] overflow-y-scroll">
+      <div className="max-w-7xl grid grid-cols-3 m-auto mb-16 gap-2 justify-items-center max-h-[560px] overflow-y-scroll max-xl:grid">
         {ongs
           .filter((ong) =>
             ong.name.toLowerCase().includes(searchTerm.toLowerCase())
           )
           .map((ong) => (
-            <div key={ong.id} className="max-w-sm flex flex-col p-2 mb-4 shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)]">
+            <div key={ong.id} className="w-96 flex flex-col p-2 mb-4 shadow-[0_1px_4px_1px_rgba(16,24,40,0.1)]">
               <h1 className="font-bold mb-2">{ong.name}</h1>
-              <p className="mb-2 max-h-48 h-48 overflow-y-scroll">{ong.description}</p>
+              <p className="mb-2 h-48 pr-4 overflow-scroll">{ong.description}</p>
               <div className="flex mb-2">
                 <Image src={dateIcon} alt="data" />
                 <p className="ml-2">Ano: {ong.start_year || "N/A"}</p>
@@ -93,13 +95,15 @@ export default function Ongs() {
                 <p className="ml-2">Instagram: {ong.instagram_link || "N/A"}</p>
               </div>
               <div className="h-12 flex justify-between">
-                <Button className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border">
-                  TRANSPARÊNCIA
-                </Button>
+                <Link className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border" href="/ongs">
+                  <Button className="w-full h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border hover:text-[#294BB6] hover:bg-white">
+                    TRANSPARÊNCIA
+                  </Button>
+                </Link>
                 <div className="w-2/12 rounded-full bg-[#F2F4F7] flex justify-center items-center">
                   <Image className="w-6 h-6" src={shareButton} alt="share" />
                 </div>
-              </div>
+              </div>   
               
               
             </div>

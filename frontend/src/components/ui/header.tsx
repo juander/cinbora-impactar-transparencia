@@ -40,7 +40,7 @@ export default function Header() {
       <div>
         <div className="flex justify-between max-sm:max-w-40">
           <Image src={prefeituraLogo} alt="Prefeitura do Recife" className="max-sm:w-[80%]"/>
-          <div className="border-solid border-l-2 border-white h-14 ml-4 mr-2 max-sm:ml-3 max-sm:mr-1 max-sm:mr-0 max-sm:h-12"></div>
+          <div className="border-solid border-l-2 border-white h-14 ml-4 mr-2 max-sm:ml-3 max-sm:mr-1 max-sm:h-12"></div>
           <Image src={cinLogo} alt="logo do cin/ufpe" className="max-sm:w-[30%] max-s"/>
         </div>
       </div>
