@@ -75,28 +75,27 @@ const start = async () => {
     },
   });
 
+  console.log("Verificando conexão com Redis Upstash...");
   try {
-    console.log("Redis desativado - usando apenas cache local, para não gastar o limite mensal");
-    // Decorador do cliente Redis simulado
-    server.decorate('redis', {
-      ping: async () => "PONG",
-      get: async () => null,
-      set: async () => "OK",
-      del: async () => 1,
-      keys: async (_pattern: string) => [],
-      ttl: async (_key: string) => -1,
-      delByPattern: async () => 0
-    });
-
-    // Adicionar método helper de cache simplificado
+    // Método ping simples em vez de set/get - economiza um comando
+    await redisClient.ping();
+    console.log("Conexão com Redis estabelecida com sucesso");
+    
+    // Decorador do cliente Redis otimizado
+    server.decorate('redis', redisClient);
+    
+    // Adicionar método helper para limpar todo o cache - otimizado
     server.decorate('clearAllCache', async () => {
       try {
-        // Limpar apenas cache local
+        // Limpar cache local imediatamente
         localCache.flushAll();
-        server.log.info('Cache local limpo com sucesso');
+        
+        // Limpar cache Redis de forma eficiente
+        await redisClient.delByPattern('cache:*');
+        server.log.info('Cache limpo com sucesso');
         return true;
       } catch (err) {
-        server.log.error(`Erro ao limpar cache local: ${err}`);
+        server.log.error(`Erro ao limpar cache: ${err}`);
         return false;
       }
     });

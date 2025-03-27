@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cinbora-transparencia:latest
+    container_name: cinbora-transparencia
+    ports:
+      - "3000:3000"  # Frontend
+      - "3333:3333"  # Backend
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost:3000
+    networks:
+      - app-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3" 
+
+networks:
+  app-network:
+    name: cinbora-network
+    driver: bridge
