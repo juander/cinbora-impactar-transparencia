@@ -4,7 +4,7 @@ import Image from "next/image";
 import prefeituraLogo from "../../assets/prefeitura.svg";
 import Link from "next/link";
 import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Menubar,
@@ -25,15 +25,20 @@ const UserSidebar = dynamic(() => import("./user-sidebar").then((mod) => mod.Use
 export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fetchedOnce = useRef(false);
+  const lastToken = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const token = Cookies.get("auth_token");
-  
-      if (token) {
+
+      if (token && token !== lastToken.current) {
+        lastToken.current = token;
         setIsLoggedIn(true);
-  
-        if (!avatarUrl) {
+
+        if (!fetchedOnce.current) {
+          fetchedOnce.current = true;
+
           fetch("http://127.0.0.1:3333/user", {
             method: "GET",
             headers: {
@@ -44,36 +49,56 @@ export default function Header() {
             .then((data) => setAvatarUrl(data?.profileUrl || null))
             .catch(() => setAvatarUrl(null));
         }
-      } else {
-        setIsLoggedIn(false);
       }
-    }, 500);
-  
+
+      if (!token) {
+        lastToken.current = undefined;
+        fetchedOnce.current = false;
+        setIsLoggedIn(false);
+        setAvatarUrl(null);
+      }
+    }, 500); 
+
     return () => clearInterval(interval);
-  }, [avatarUrl]);
+  }, []);
   
 
   return (
     <header className="bg-[#00B3FF] py-5 px-12 flex items-center justify-between max-sm:px-5">
       <div>
-        <div className="flex justify-between max-sm:max-w-40">
-          <Image src={prefeituraLogo} alt="Prefeitura do Recife" className="max-sm:w-[80%]"/>
-          <div className="border-solid border-l-2 border-white h-14 ml-4 mr-2 max-sm:ml-3 max-sm:mr-1 max-sm:h-12"></div>
-          <Image src={cinLogo} alt="logo do cin/ufpe" className="max-sm:w-[30%] max-s"/>
-        </div>
+      <div className="flex justify-between max-sm:max-w-40  items-center gap-4">
+        <Link href="/" className="inline-block">
+          <Image
+            src={prefeituraLogo}
+            alt="Prefeitura do Recife"
+            className=" w-auto h-auto"
+          />
+        </Link>
+
+        <div className="border-solid border-l-2 border-white h-14 max-sm:h-12" />
+
+        <Link href="/" className="inline-block">
+          <Image
+            src={cinLogo}
+            alt="logo do cin/ufpe"
+            className=" w-auto h-auto"
+          />
+        </Link>
+      </div>
+
       </div>
       <Menubar className="border-none shadow-none text-white justify-between max-lg:hidden">
         <MenubarMenu>
           <Link href="/">
             <MenubarTrigger className="px-20 text-xl font-semibold text-white relative group">
-              <span className="relative inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
+              <span className="relative cursor-pointer inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
                 Início
               </span>
             </MenubarTrigger>
           </Link>
           <Link href="/partners">
             <MenubarTrigger className="px-20 text-xl font-semibold text-white relative group">
-              <span className="relative inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
+              <span className="relative cursor-pointer inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
                 Parceiros
               </span>
             </MenubarTrigger>

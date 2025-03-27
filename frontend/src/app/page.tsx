@@ -116,21 +116,23 @@ export default function Ongs() {
                 className="w-96 flex flex-col p-6 bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 max-sm:w-80 relative"
               >
                 <h1 className="font-extrabold text-xl text-[#2E4049] mb-3">{ong.name}</h1>
-                <p className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis">
-                  {ong.description.length > 180
-                    ? (
-                        <>
-                          {ong.description.slice(0, 180)}...{" "}
-                          <button
-                            onClick={() => openModal(ong)}
-                            className="text-[#294BB6] underline font-medium hover:text-[#1d346e]"
-                          >
-                            Ler mais
-                          </button>
-                        </>
-                      )
-                    : ong.description}
-                </p>
+                <div className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis relative">
+                  {ong.description.length > 180 ? (
+                    <>
+                      {ong.description.slice(0, 180)}...
+                      <button
+                        onClick={() => openModal(ong)}
+                        className="text-[#294BB6] underline font-medium hover:text-[#1d346e] block mt-1"
+                      >
+                        Ler mais
+                      </button>
+                    </>
+                  ) : (
+                    ong.description
+                  )}
+                </div>
+
+
                 <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
                   <Image src={dateIcon} alt="data" />
                   <span className="truncate">Ano: {ong.start_year || "N/A"}</span>
@@ -160,14 +162,18 @@ export default function Ongs() {
                       TRANSPARÊNCIA
                     </Button>
                   </Link>
-                  <button
-                    onClick={() => openModal(ong)}
-                    className="rounded-full p-3 bg-[#E6EAF1] hover:bg-[#d6deec] border border-[#c3d0e6] transition-all shadow-sm"
-                    title="Ver mais detalhes"
+
+                  <Link
+                    href={`https://api.whatsapp.com/send?text=${typeof window !== "undefined" ? window.location.origin : ""}/actions?action_id=${ong.id}`}
+                    target="_blank"
+                    className="w-12 h-12"
                   >
-                    <Image className="w-5 h-5" src={shareButton} alt="ver mais" />
-                  </button>
+                    <div className="w-full h-full rounded-full bg-[#F2F4F7] flex justify-center items-center border border-[#c3d0e6] hover:bg-[#d6deec] transition-all shadow-sm">
+                      <Image className="w-5 h-5" src={shareButton} alt="Compartilhar no WhatsApp" />
+                    </div>
+                  </Link>
                 </div>
+
               </div>
             ))}
         </div>

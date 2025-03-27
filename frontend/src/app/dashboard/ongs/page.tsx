@@ -146,22 +146,21 @@ export default function ActionsPage() {
   }, []);
   
   useEffect(() => {
+    const ngoId = Cookies.get("ngo_id");
     const token = Cookies.get("auth_token");
   
-    fetch("http://127.0.0.1:3333/logs/last", {
+    fetch(`http://127.0.0.1:3333/logs/last/${ngoId}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const timestamp = data[0]?.timestamp;
-          if (timestamp) {
-            const date = new Date(timestamp);
-            const formatted = date.toLocaleDateString("pt-BR");
-            setLastUpdated(formatted);
-          }
+        const timestamp = data?.timestamp;
+        if (timestamp) {
+          const date = new Date(timestamp);
+          const formatted = date.toLocaleDateString("pt-BR");
+          setLastUpdated(formatted);
         }
       })
       .catch(err => {
@@ -169,6 +168,7 @@ export default function ActionsPage() {
       });
   }, []);
   
+    
   
   useEffect(() => {
     if (isOpen) {
@@ -473,13 +473,15 @@ const handleSave = async () => {
   }
 
   const isUpdate = !!editingSlide.id;
+  const updatedCategories = validateAndFixCategories();
+  const hasCategoryChanges =
+    JSON.stringify(updatedCategories) !== JSON.stringify(originalCategorysExpenses);
+  
   if (!isUpdate && !imageFile) {
     toast.error("Erro: É obrigatório anexar uma imagem antes de salvar.");
     setIsSaving(false);
     return;
   }
-
-  const updatedCategories = validateAndFixCategories();
 
   const token = Cookies.get("auth_token");
   const method = isUpdate ? "PUT" : "POST";
@@ -537,10 +539,11 @@ const handleSave = async () => {
     // Fix: Ensure id is always converted to string
     const slideId = updatedSlide.id ? String(updatedSlide.id) : "";
 
-    if (isUpdate && slideId) {
+    if (isUpdate && slideId && hasCategoryChanges) {
       const categoryRes = await updateCategoryExpenses(slideId, updatedCategories);
       if (categoryRes === false) throw new Error("Erro nas categorias.");
     }
+    
 
     if (isUpdate && slideId && imageFile) {
       await updateSlideImage(slideId);
@@ -675,7 +678,7 @@ const handleSave = async () => {
                           </div>
  
                           {/* Tag do Tipo */}
-                          <p title={slide.type} className="inline-block max-w-32 text-xs font-semibold text-[#0056D2] bg-[#E9F2FF] px-3 py-1 rounded-lg uppercase whitespace-nowrap overflow-hidden text-ellipsis">
+                          <p title={slide.type} className="inline-block rounded-[8px] max-w-32 text-xs font-semibold text-[#0056D2] bg-[#E9F2FF] px-3 py-1 uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                             {slide.type}
                           </p>
  
@@ -876,40 +879,22 @@ const handleSave = async () => {
                         if (parts.length > 2) return;
                         if (parts[1]) rawValue = parts[0] + "." + parts[1].slice(0, 2);
                       
-                        if (selectedCategory !== null) {
-                          const newExpenses = {
-                            ...editingSlide.categorysExpenses,
-                            [selectedCategory]: rawValue,
-                          };
-
-
-                          setEditingSlide((prev) => ({
-                            ...prev,
-                            categorysExpenses: newExpenses,
-                            spent: calculateSpent(newExpenses),
-                          }));
-                          
-                        }
-                        
-                      
+                        setEditingSlide((prev) => ({
+                          ...prev,
+                          goal: rawValue,
+                        }));
                       }}
                       
                       onBlur={() => {
-                        const raw = editingSlide.categorysExpenses[selectedCategory!] as string;
-                        const parsed = parseFloat(raw || "0");
+                        const parsed = parseFloat(String(editingSlide.goal || "0"));
                         if (!isNaN(parsed)) {
-                          const newExpenses = {
-                            ...editingSlide.categorysExpenses,
-                            [selectedCategory!]: parsed,
-                          };
-                      
                           setEditingSlide((prev) => ({
                             ...prev,
-                            categorysExpenses: newExpenses,
-                            spent: calculateSpent(newExpenses),
+                            goal: parsed,
                           }));
                         }
                       }}
+                      
                       
                       inputMode="decimal"
                     />

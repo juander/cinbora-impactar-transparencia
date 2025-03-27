@@ -69,7 +69,8 @@ export default function ActionsDocuments() {
                   taxInvoices.map((item, index) => (
                     <div key={index} onClick={() => handleDownload(item)} className="w-full h-12 border border-[#294BB6] rounded flex items-center px-0.5 cursor-pointer">
                       <Image src={download} alt="download" />
-                      <span title={item.name} className="ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
+                      <span title={item.name} className="ml-2 whitespace-nowrap overflow-hidden truncate max-w-[180px]">{item.name}</span>
+
                     </div>
                   ))
                 )}

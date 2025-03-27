@@ -30,9 +30,14 @@ class LogService {
     return this.logRepository.findByNgoId(ngoId);
   }
 
-  // Novo método para obter apenas o último log de uma ONG
+  // Método para obter apenas o último log de uma ONG
   async getLastLogByNgoId(ngoId: number) {
-    return this.logRepository.findLastByNgoId(ngoId);
+    try {
+      const log = await this.logRepository.getLastLogByNgoId(ngoId);
+      return log;
+    } catch (error) {
+      throw new Error("Erro ao buscar o último log da ONG");
+    }
   }
 }
 

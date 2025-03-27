@@ -20,17 +20,18 @@ class LogRepository {
     return logs;
   }
 
-  async findLastByNgoId(ngoId: number): Promise<Log | null> {
-    const log = await prismaClient.log.findFirst({
-      where: {
-        ngoId,
-      },
-      orderBy: {
-        timestamp: 'desc',
-      },
-    });
-    return log;
-  }
+async getLastLogByNgoId(ngoId: number): Promise<Log | null> {
+  const log = await prismaClient.log.findFirst({
+    where: {
+      ngoId
+    },
+    orderBy: {
+      timestamp: 'desc'
+    }
+  });
+  
+  return log;
+}
 }
 
 export { LogRepository };

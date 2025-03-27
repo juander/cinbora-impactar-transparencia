@@ -78,8 +78,8 @@ export default function Gallery() {
   }, []);
   
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>, // Define o tipo do evento
-    type: "image" | "video" // Define o tipo do parâmetro "type"
+    event: React.ChangeEvent<HTMLInputElement>, 
+    type: "image" | "video"
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;

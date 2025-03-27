@@ -43,7 +43,7 @@ const AccordionSection = ({
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => {
-        setTimeout(updateHeight, 100); 
+        setTimeout(updateHeight, 100);
       });
     } else {
       setHeight("0px");
@@ -60,7 +60,6 @@ const AccordionSection = ({
   );
 };
 
-
 export default function Documents() {
   const [others, setOthers] = useState<FileDocument[]>([]);
   const [taxInvoices, setTaxInvoices] = useState<FileDocument[]>([]);
@@ -71,6 +70,10 @@ export default function Documents() {
   const [uploadCategory, setUploadCategory] = useState("other");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const deduplicate = (data: FileDocument[]) => {
+    return Array.from(new Map(data.map(item => [item.id, item])).values());
+  };
+
   const getFiles = () => {
     const ngoId = Cookies.get("ngo_id");
     if (ngoId) {
@@ -79,7 +82,7 @@ export default function Documents() {
           if (!response.ok) throw new Error("Erro ao buscar outros arquivos");
           return response.json();
         })
-        .then(data => setOthers(data))
+        .then(data => setOthers(deduplicate(data)))
         .catch(err => console.error(err));
 
       fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/tax_invoices`)
@@ -87,7 +90,7 @@ export default function Documents() {
           if (!response.ok) throw new Error("Erro ao buscar notas fiscais");
           return response.json();
         })
-        .then(data => setTaxInvoices(data))
+        .then(data => setTaxInvoices(deduplicate(data)))
         .catch(err => console.error(err));
 
       fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/reports`)
@@ -95,7 +98,7 @@ export default function Documents() {
           if (!response.ok) throw new Error("Erro ao buscar relatórios");
           return response.json();
         })
-        .then(data => setReports(data))
+        .then(data => setReports(deduplicate(data)))
         .catch(err => console.error(err));
     }
   };
@@ -176,7 +179,7 @@ export default function Documents() {
       </div>
       {list.map((item, index) => (
         <div
-          key={index}
+          key={item.id}
           className="w-full h-14 mr-2 border border-[#294BB6] rounded-[16px] flex items-center justify-between p-4 bg-[#F9FAFB] hover:shadow-md transition"
         >
           <div className="flex items-center gap-3">
@@ -234,12 +237,11 @@ export default function Documents() {
     <div className="w-9/12 m-auto mb-20 mt-10 max-[1600px]:w-11/12">
       <div className="flex flex-col">
 
-        {/* Notas Fiscais */}
         <div onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
           <p className="ml-12">Notas Fiscais</p>
           <Image className={`w-4 mr-12 transition-transform duration-300 ${isNotasFiscaisOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
         </div>
-        <AccordionSection isOpen={isNotasFiscaisOpen} key={taxInvoices.length}>
+        <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
           <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
@@ -248,12 +250,11 @@ export default function Documents() {
           </div>
         </AccordionSection>
 
-        {/* Relatórios */}
         <div onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
           <p className="ml-12">Relatórios</p>
           <Image className={`w-4 mr-12 transition-transform duration-300 ${isRelatoriosOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
         </div>
-        <AccordionSection isOpen={isRelatoriosOpen} key={reports.length}>
+        <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
           <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
@@ -262,12 +263,11 @@ export default function Documents() {
           </div>
         </AccordionSection>
 
-        {/* Outros documentos */}
         <div onClick={() => setIsOutrosOpen(!isOutrosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
           <p className="ml-12">Outros documentos</p>
           <Image className={`w-4 mr-12 transition-transform duration-300 ${isOutrosOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
         </div>
-        <AccordionSection isOpen={isOutrosOpen} key={others.length}>
+        <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
           <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
