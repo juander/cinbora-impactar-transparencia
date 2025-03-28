@@ -14,8 +14,6 @@ import ModalPortal from "@/components/ui/modalPortal";
 import { Search } from "lucide-react";
 import TypedHeader from "@/components/ui/typedHeader";
 
-
-
 interface Ong {
   id: number;
   name: string;
@@ -33,7 +31,6 @@ export default function Ongs() {
 
   const openModal = (ong: Ong) => setSelectedOng(ong);
   const closeModal = () => setSelectedOng(null);
-  
 
   useEffect(() => {
     fetch("http://127.0.0.1:3333/ongs")
@@ -57,7 +54,6 @@ export default function Ongs() {
             Portal da Transparência
           </h1>
           <TypedHeader />
-
         </div>
         <div className="flex flex-col">
           <Image
@@ -97,9 +93,6 @@ export default function Ongs() {
         </div>
       </div>
 
-
-
-
       {!isLoading && ongs.length === 0 && (
         <div className="w-full text-center mt-4 mb-20 text-red-600">Nenhuma ONG encontrada.</div>
       )}
@@ -115,8 +108,8 @@ export default function Ongs() {
                 key={ong.id}
                 className="w-96 flex flex-col p-6 bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 max-sm:w-80 relative"
               >
-                <h1 className="font-extrabold text-xl text-[#2E4049] mb-3">{ong.name}</h1>
-                <div className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis relative">
+                <h1 title={ong.name} className="font-extrabold text-xl text-[#2E4049] mb-3 line-clamp-5 overflow-hidden">{ong.name}</h1>
+                <div className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis rexlative">
                   {ong.description.length > 180 ? (
                     <>
                       {ong.description.slice(0, 180)}...
@@ -131,7 +124,6 @@ export default function Ongs() {
                     ong.description
                   )}
                 </div>
-
 
                 <div className="flex items-center gap-2 mb-2 text-sm text-gray-600">
                   <Image src={dateIcon} alt="data" />
@@ -173,7 +165,6 @@ export default function Ongs() {
                     </div>
                   </Link>
                 </div>
-
               </div>
             ))}
         </div>

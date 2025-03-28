@@ -32,6 +32,25 @@ interface GroupedLogs {
   [dateKey: string]: Log[];
 }
 
+const keyTranslations: Record<string, string> = {
+  name: "Nome",
+  type: "Tipo",
+  spent: "Gasto",
+  goal: "Meta",
+  colected: "Arrecadado",
+  filename: "Nome do Arquivo",
+  category: "Categoria",
+  mimetype: "Tipo",
+  size: "Tamanho",
+  actionName: "Nome da Ação",
+  description: "Descrição",
+  telefone: "Telefone",
+  Instagram: "Instagram",
+  ano: "Ano",
+  totalExpenses: "Total de Despesas",
+  expensesByCategory: "Despesas por Categoria",
+};
+
 const HistoryPage: React.FC = () => {
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
   const [logs, setLogs] = useState<GroupedLogs>({});
@@ -59,14 +78,29 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchLogs(); }, []);
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   const groupLogsByDate = (logsData: Log[]): GroupedLogs =>
     logsData.reduce((acc, log) => {
       const d = new Date(log.timestamp);
-      const dateKey = `${d.getDate()} de ${[
-        "janeiro","fevereiro","março","abril","maio","junho",
-        "julho","agosto","setembro","outubro","novembro","dezembro"][d.getMonth()]} de ${d.getFullYear()}`;
+      const dateKey = `${d.getDate()} de ${
+        [
+          "janeiro",
+          "fevereiro",
+          "março",
+          "abril",
+          "maio",
+          "junho",
+          "julho",
+          "agosto",
+          "setembro",
+          "outubro",
+          "novembro",
+          "dezembro",
+        ][d.getMonth()]
+      } de ${d.getFullYear()}`;
       (acc[dateKey] = acc[dateKey] || []).push(log);
       return acc;
     }, {} as GroupedLogs);
@@ -77,8 +111,10 @@ const HistoryPage: React.FC = () => {
   };
 
   const formatChangesForDisplay = (log: Log): string[] => {
-    const { changes, model } = log;
-    if (!changes) return [];
+    const { changes, model, action } = log;
+    if (!changes || typeof changes !== "object") return [];
+    const formatCurrency = (value: number) => `R$ ${value.toLocaleString("pt-BR")}`;
+    const translateKey = (key: string) => keyTranslations[key] || key;
     switch (model) {
       case "Arquivo da ONG":
       case "Arquivo da Ação":
@@ -86,40 +122,38 @@ const HistoryPage: React.FC = () => {
           .filter(([key]) => key !== "mimetype" && key !== "size")
           .map(([key, value]) =>
             key === "size"
-              ? `${key}: "${
+              ? `${translateKey(key)}: "${
                   Number(value) < 1024
                     ? `${value} bytes`
                     : Number(value) < 1048576
                     ? `${(Number(value) / 1024).toFixed(2)} KB`
                     : `${(Number(value) / 1048576).toFixed(2)} MB`
                 }"`
-              : `${key}: "${value}"`
+              : `${translateKey(key)}: "${value}"`
           );
       case "Ação":
         return Object.entries(changes)
-          .filter(([key]) => key !== "aws_url" || Object.keys(changes).length === 1)
+          .filter(([key]) => key !== "aws_url")
           .map(([key, value]) =>
             ["spent", "goal", "colected"].includes(key) && typeof value === "number"
-              ? `${key}: "R$ ${value.toLocaleString("pt-BR")}"`
-              : `${key}: "${value}"`
+              ? `${translateKey(key)}: "${formatCurrency(value)}"`
+              : `${translateKey(key)}: "${value}"`
           );
       case "Gráfico de despesas": {
-        const catExp = changes.categorysExpenses || changes.expensesByCategory;
-        return catExp
-          ? Object.entries(catExp).map(
-              ([cat, val]) => `${cat}: "R$ ${Number(val).toLocaleString("pt-BR")}"`
-            )
-          : Object.entries(changes).map(([k, v]) => `${k}: "${v}"`);
+        const despesas = changes.expensesByCategory || changes.categorysExpenses || changes;
+        return Object.entries(despesas).map(
+          ([key, val]) => `${translateKey(key)}: "${formatCurrency(Number(val))}"`
+        );
       }
       default:
-        return Object.entries(changes).map(([k, v]) => `${k}: "${v}"`);
+        return Object.entries(changes).map(
+          ([key, value]) => `${translateKey(key)}: "${value}"`
+        );
     }
   };
 
-  // Add helper function for timestamp-based unique key
   const getLogUniqueKey = (log: Log): string => {
     if (log.id) return log.id;
-    // Use full timestamp as unique identifier
     return new Date(log.timestamp).getTime().toString();
   };
 
@@ -167,11 +201,11 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </button>
                       {openSections[logKey] && (
-                        <div className="px-4 pb-4 text-sm text-gray-600 border-t">
+                        <div className="px-4 pb-4 text-sm text-gray-600 border-t overflow-x-auto">
                           <p className="font-semibold mt-2">Mudanças:</p>
                           <ul className="list-disc list-inside space-y-1 mt-1">
                             {formatChangesForDisplay(item).map((change, idx) => (
-                              <li key={idx}>{change}</li>
+                              <li key={idx} className="break-words whitespace-normal">{change}</li>
                             ))}
                           </ul>
                         </div>

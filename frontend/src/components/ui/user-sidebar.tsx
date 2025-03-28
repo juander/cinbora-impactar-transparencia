@@ -262,7 +262,7 @@ export function UserSidebar({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-full p-1 bg-gray-200 hover:bg-gray-300 transition-all"
+        className="rounded-full p-1 bg-gray-200 hover:bg-gray-300 transition-all mr-8 ml-24"
       >
         <div className="w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
           {avatarUrl ? (
@@ -326,7 +326,7 @@ export function UserSidebar({
 
               {ngoName && (
                 <div className="w-full mt-2 text-center">
-                  <p className="text-sm text-gray-600 font-medium">{ngoName}</p>
+                  <p title={ngoName} className="text-sm text-gray-600 font-medium line-clamp-5">{ngoName}</p>
                   <Button
                     id="informacaoOngs"
                     variant="outline"
