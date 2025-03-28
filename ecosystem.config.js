@@ -1,26 +1,24 @@
 module.exports = {
-    apps: [
-      {
-        name: "backend",
-        cwd: "/app/backend",
-        script: "node",
-        args: "-r module-alias/register dist/server.js",
-        env: {
-          NODE_ENV: "production",
-          PORT: "3333",
-        },
+  apps: [
+    {
+      name: "backend",
+      cwd: "/app/backend",
+      script: "./start.sh",  // Usar o script de inicialização
+      env: {
+        NODE_ENV: "production",
+        PORT: "3333",
       },
-      {
-        name: "frontend",
-        cwd: "/app/frontend",
-        script: "node",
-        args: "server.js",
-        env: {
-          NODE_ENV: "production",
-          PORT: "3000",
-          HOSTNAME: "0.0.0.0",
-        },
+    },
+    {
+      name: "frontend",
+      cwd: "/app/frontend",
+      script: "node",
+      args: "server.js",
+      env: {
+        NODE_ENV: "production",
+        PORT: "3000",
+        HOSTNAME: "0.0.0.0",
       },
-    ],
-  };
-  
+    },
+  ],
+};

@@ -2,39 +2,49 @@
 set -e
 
 # Start MongoDB in background
-mongod --port $MONGO_REPLICA_PORT --replSet rs0 --bind_ip 0.0.0.0 &
-MONGOD_PID=$!
+mongod --replSet rs0 --bind_ip_all &
+MONGO_PID=$!
 
-# Wait for MongoDB to start accepting connections
-echo "Waiting for MongoDB to start..."
-until mongosh --port $MONGO_REPLICA_PORT --eval "db.adminCommand('ping')" &>/dev/null; do
+# Wait for MongoDB to become available
+until mongosh --eval "print('MongoDB is ready')" > /dev/null 2>&1; do
+  echo "Waiting for MongoDB to start..."
   sleep 1
 done
 
-# Check if replica set is already initialized
-echo "Checking replica set status..."
-RS_STATUS=$(mongosh --port $MONGO_REPLICA_PORT --eval "rs.status().ok" --quiet || echo "0")
+# Initialize replica set if not already done
+mongosh --eval "rs.status()" > /dev/null 2>&1 || mongosh <<EOF
+  rs.initiate({
+    _id: "rs0",
+    members: [
+      { _id: 0, host: "$MONGO_REPLICA_HOST:$MONGO_REPLICA_PORT" }
+    ]
+  })
+EOF
 
-if [ "$RS_STATUS" = "1" ]; then
-  echo "Replica set already initialized"
-else
-  # Initialize replica set
-  echo "Initializing replica set..."
-  mongosh --port $MONGO_REPLICA_PORT --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: '$MONGO_REPLICA_HOST:$MONGO_REPLICA_PORT' }] })"
+# Create root user if environment variables provided
+if [ -n "$MONGO_INITDB_ROOT_USERNAME" ] && [ -n "$MONGO_INITDB_ROOT_PASSWORD" ]; then
+  mongosh admin --eval "
+    if (db.getUser('$MONGO_INITDB_ROOT_USERNAME') == null) {
+      db.createUser({
+        user: '$MONGO_INITDB_ROOT_USERNAME',
+        pwd: '$MONGO_INITDB_ROOT_PASSWORD',
+        roles: [ { role: 'root', db: 'admin' } ]
+      })
+    }"
 fi
 
-# Check if admin user exists and create only if needed
-echo "Checking for admin user..."
-USER_EXISTS=$(mongosh --port $MONGO_REPLICA_PORT admin --quiet --eval "db.getUser('$MONGO_INITDB_ROOT_USERNAME') ? true : false")
-
-if [ "$USER_EXISTS" = "true" ]; then
-  echo "Admin user already exists, skipping creation"
-else
-  echo "Creating admin user..."
-  mongosh --port $MONGO_REPLICA_PORT admin --eval "db.createUser({ user: '$MONGO_INITDB_ROOT_USERNAME', pwd: '$MONGO_INITDB_ROOT_PASSWORD', roles: [ 'root' ] })"
+# Create database if specified and not already created
+if [ -n "$MONGO_INITDB_DATABASE" ]; then
+  mongosh --eval "
+    use $MONGO_INITDB_DATABASE
+    db.createCollection('_setup_verification')"
 fi
 
-echo "REPLICA SET ONLINE"
+echo "MongoDB replica set setup completed"
 
-# Keep container running
-wait $MONGOD_PID
+# Kill the MongoDB process
+kill $MONGO_PID
+wait $MONGO_PID
+
+# Start MongoDB in foreground mode
+exec mongod --replSet rs0 --bind_ip_all

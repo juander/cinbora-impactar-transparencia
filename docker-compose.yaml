@@ -1,4 +1,5 @@
 services:
+  # MongoDB with replica set
   mongo:
     container_name: mongo
     build: ./backend/mongodb_rs
@@ -7,7 +8,54 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongo
       MONGO_INITDB_ROOT_PASSWORD: example
       MONGO_INITDB_DATABASE: mongo
-      MONGO_REPLICA_HOST: localhost
+      MONGO_REPLICA_HOST: mongo
       MONGO_REPLICA_PORT: 27017
     ports:
-      - '27017:27017'
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # Combined frontend/backend application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cinbora-transparencia:latest
+    container_name: cinbora-transparencia
+    ports:
+      - "3000:3000"  # Frontend
+      - "3333:3333"  # Backend
+    environment:
+      NODE_ENV: production
+      # Connection string for MongoDB replica set with proper authentication
+      DATABASE_URL: mongodb://mongo:example@mongo:27017/mongo?authSource=admin&directConnection=true&replicaSet=rs0
+      FRONTEND_URL: http://localhost:3000/
+    env_file:
+      - .env
+    networks:
+      - app-network
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    name: cinbora-mongodb-data
