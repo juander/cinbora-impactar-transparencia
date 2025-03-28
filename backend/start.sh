@@ -2,11 +2,24 @@
 set -e
 
 echo "Waiting for MongoDB to be ready..."
-# Wait for MongoDB to be ready
-until mongosh --host mongo --port 27017 --eval "print('MongoDB connection successful')" > /dev/null 2>&1; do
-  echo "MongoDB connection attempt failed. Retrying in 5 seconds..."
+# Check MongoDB connection using Node.js script
+max_attempts=30
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+  if node check-mongo.js; then
+    echo "MongoDB connection successful"
+    break
+  fi
+  
+  attempt=$((attempt+1))
+  echo "MongoDB connection attempt $attempt of $max_attempts failed. Retrying in 5 seconds..."
   sleep 5
 done
+
+if [ $attempt -eq $max_attempts ]; then
+  echo "Failed to connect to MongoDB after $max_attempts attempts. Exiting."
+  exit 1
+fi
 
 echo "MongoDB is ready. Pushing Prisma schema..."
 # Run Prisma database push

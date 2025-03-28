@@ -17,11 +17,11 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: mongosh admin -u mongo -p example --eval "rs.status().ok === 1 && db.runCommand('ping').ok === 1" || exit 1
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 40s
+      start_period: 60s
 
   # Combined frontend/backend application
   app:
@@ -37,7 +37,7 @@ services:
       NODE_ENV: production
       # Connection string for MongoDB replica set with proper authentication
       DATABASE_URL: mongodb://mongo:example@mongo:27017/mongo?authSource=admin&directConnection=true&replicaSet=rs0
-      FRONTEND_URL: http://localhost:3000/
+      FRONTEND_URL: http://localhost:3000
     env_file:
       - .env
     networks:

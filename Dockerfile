@@ -57,13 +57,13 @@ RUN npm run build
 # ----------------------
 FROM node:18-alpine
 
-# Install PM2 globally to manage multiple processes and MongoDB tools
-RUN npm install -g pm2 && \
-    apk add --no-cache mongodb-tools
-
-# Create app directory structure
+# Create app directory structure first
 WORKDIR /app
 RUN mkdir -p /app/backend /app/frontend
+
+# Install PM2 globally and necessary tools
+RUN npm install -g pm2 mongodb-client && \
+    apk add --no-cache mongodb-tools bash
 
 # Copy backend from builder
 WORKDIR /app/backend
@@ -71,19 +71,25 @@ COPY --from=backend-builder /build/dist ./dist
 COPY --from=backend-builder /build/node_modules ./node_modules
 COPY --from=backend-builder /build/package.json ./
 COPY --from=backend-builder /build/module-alias.js ./
+COPY --from=backend-builder /build/tsconfig.json ./tsconfig.json
 COPY --from=backend-builder /build/prisma/schema.prisma ./prisma/schema.prisma
 COPY --from=backend-builder /build/node_modules/.prisma ./node_modules/.prisma
 
-# Add startup script and ensure correct line endings and permissions
+# Now install mongodb after the directory exists
+RUN npm install mongodb
+
+# Add check-mongo script
+COPY backend/check-mongo.js ./check-mongo.js
+
+# Add start script
 COPY backend/start.sh ./start.sh
-RUN sed -i 's/\r$//' ./start.sh && \
-    chmod +x ./start.sh
+RUN chmod +x ./start.sh
 
 # Copy frontend from builder
 WORKDIR /app/frontend
 COPY --from=frontend-builder /app/.next/standalone ./
 COPY --from=frontend-builder /app/.next/static ./.next/static
-COPY --from=frontend-builder /app/public ./public
+RUN mkdir -p public
 
 # Create PM2 ecosystem file
 WORKDIR /app
