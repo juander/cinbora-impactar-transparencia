@@ -1,5 +1,6 @@
 services:
   mongo:
+    container_name: mongo
     build: ./backend/mongodb_rs
     restart: always
     environment:
