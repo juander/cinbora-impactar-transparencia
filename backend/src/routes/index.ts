@@ -1,3 +1,4 @@
+import { FastifyInstance } from "fastify";
 import { FastifyTypedInstance } from "@config/zodType";
 import { AuthRoutes } from "@modules/authAPI";
 import { userRoutes } from "@modules/user";
@@ -6,15 +7,20 @@ import { actionRoutes } from "@modules/action";
 import { fileRoutes } from "@modules/file";
 import { logRoutes } from "@modules/log";
 import { diagnosticRoutes } from "@modules/cache";
+import { registerCacheCleanupHook } from "@middlewares/cacheCleanupHook";
 
-export async function routes(server: FastifyTypedInstance) {
-  await server.register(AuthRoutes);
-  await server.register(userRoutes);
-  await server.register(ongRoutes);
-  await server.register(actionRoutes);
-  await server.register(fileRoutes);
-  await server.register(logRoutes);
+export async function routes(fastify: FastifyInstance) {
+  // Registre o hook de limpeza de cache uma única vez
+  registerCacheCleanupHook(fastify);
+
+  // Registre suas rotas
+  await fastify.register(AuthRoutes);
+  await fastify.register(userRoutes);
+  await fastify.register(ongRoutes);
+  await fastify.register(actionRoutes);
+  await fastify.register(fileRoutes);
+  await fastify.register(logRoutes);
 
   // Endpoint de diagnóstico do cache
-  await server.register(diagnosticRoutes);
+  await fastify.register(diagnosticRoutes);
 }

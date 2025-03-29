@@ -1,20 +1,43 @@
-import { FastifyInstance } from "fastify";
-import { localCache, keyPatternMap } from "@shared/redisClient";
+import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { localCache, keyPatternMap } from "@shared/cacheClient";
+import cacheClient from "@shared/cacheClient";
+import { config } from "@config/dotenv";
+
+// Middleware de proteção para rotas administrativas
+async function adminAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
+  // 1. Verificar token de administração no header
+  const adminToken = request.headers['x-admin-token'];
+  const configuredToken = process.env.ADMIN_TOKEN || 'your-secure-token-here';
+  
+  // 2. Lista de IPs permitidos (opcional)
+  const allowedIPs = (process.env.ALLOWED_ADMIN_IPS || '127.0.0.1,::1').split(',');
+  const clientIP = request.ip;
+  
+  // Verificar se o token é válido OU se o IP está na lista permitida
+  const validToken = adminToken === configuredToken;
+  const validIP = allowedIPs.includes(clientIP);
+  
+  // Em ambiente de desenvolvimento, permitir acesso local sempre
+  const isDev = process.env.NODE_ENV === 'development';
+  const isLocalIP = clientIP === '127.0.0.1' || clientIP === '::1' || clientIP.startsWith('172.') || clientIP.startsWith('192.168.');
+  
+  if (!(validToken || (isDev && isLocalIP) || validIP)) {
+    reply.status(403).send({ 
+      error: "Acesso negado. Autenticação requerida para operações administrativas."
+    });
+    return reply;
+  }
+}
 
 export async function diagnosticRoutes(fastify: FastifyInstance) {
   // Rota para verificar estatísticas do cache
-  fastify.get("/admin/cache-stats", async () => {
-    // Verifique se há uma senha de administrador ou IP permitido
-    // Isso é importante para não expor informações em produção
-    
+  fastify.get("/admin/cache-stats", { preHandler: [adminAuthMiddleware] }, async () => {
     const localStats = localCache.getStats();
     const patternKeys = Object.entries(keyPatternMap).map(([pattern, keys]) => ({
       pattern,
       keyCount: keys.size,
       keys: Array.from(keys)
     }));
-    
-    const redisKeys = await fastify.redis.keys('cache:*');
     
     return {
       localCache: {
@@ -24,20 +47,19 @@ export async function diagnosticRoutes(fastify: FastifyInstance) {
         ksize: localStats.ksize,
         vsize: localStats.vsize
       },
-      patterns: patternKeys,
-      redisKeyCount: redisKeys.length
+      patterns: patternKeys
     };
   });
   
   // Rota para testar a invalidação de cache
-  fastify.post("/admin/invalidate-cache", async (request, reply) => {
+  fastify.post("/admin/invalidate-cache", { preHandler: [adminAuthMiddleware] }, async (request, reply) => {
     const body = request.body as { pattern: string };
     
     if (!body.pattern) {
       return reply.status(400).send({ error: "Pattern não especificado" });
     }
     
-    const keysInvalidated = await fastify.redis.delByPattern(body.pattern);
+    const keysInvalidated = await cacheClient.delByPattern(body.pattern);
     
     return {
       pattern: body.pattern,
@@ -46,20 +68,26 @@ export async function diagnosticRoutes(fastify: FastifyInstance) {
   });
   
   // Rota para limpar todo o cache
-  fastify.post("/admin/clear-cache", async () => {
+  fastify.post("/admin/clear-cache", { preHandler: [adminAuthMiddleware] }, async () => {
     const localKeysCleared = localCache.keys().length;
-    localCache.flushAll();
-    
-    // Limpar todos os registros de padrões
-    Object.keys(keyPatternMap).forEach(pattern => {
-      keyPatternMap[pattern].clear();
-    });
-    
-    const redisKeysCleared = await fastify.redis.delByPattern("cache:*");
+    await cacheClient.flushAll();
     
     return {
-      localKeysCleared,
-      redisKeysCleared
+      keysCleared: localKeysCleared
+    };
+  });
+
+  // Rota simples de health check (esta pode continuar pública)
+  fastify.get("/api/health", async () => {
+    return {
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      cache: {
+        keys: localCache.keys().length,
+        hits: localCache.getStats().hits,
+        misses: localCache.getStats().misses
+      },
+      database: "connected"
     };
   });
 }

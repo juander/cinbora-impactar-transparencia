@@ -25,10 +25,9 @@ async function fileRoutes(fastify: FastifyInstance) {
         // Invalidate cache first, then send response
         if (fileEntity && request.user) {
           const cacheCategory = fileController.getCacheCategory(fileEntity.category);
-          const cachePath = `cache:ongs:${request.user.ngoId}:files:${cacheCategory}`;
+          const cachePath = `ongs:${request.user.ngoId}:files:${cacheCategory}`;
           
           try {
-            // Usar invalidateCache para chave específica
             await invalidateCache(fastify, cachePath);
           } catch (cacheError) {
             console.error('Error invalidating cache:', cacheError);
@@ -58,10 +57,9 @@ async function fileRoutes(fastify: FastifyInstance) {
         // Invalidate cache first, then send response
         if (fileEntity && request.params.actionId) {
           const cacheCategory = fileController.getCacheCategory(fileEntity.category);
-          const cachePath = `cache:actions:${request.params.actionId}:files:${cacheCategory}`;
+          const cachePath = `actions:${request.params.actionId}:files:${cacheCategory}`;
           
           try {
-            // Usar invalidateCache para chave específica
             await invalidateCache(fastify, cachePath);
           } catch (cacheError) {
             console.error('Error invalidating cache:', cacheError);
@@ -92,10 +90,9 @@ async function fileRoutes(fastify: FastifyInstance) {
         // Invalidate cache first, then send response
         if (result && request.user) {
           const cacheCategory = fileController.getCacheCategory(result.category);
-          const cachePath = `cache:ongs:${request.user.ngoId}:files:${cacheCategory}`;
+          const cachePath = `ongs:${request.user.ngoId}:files:${cacheCategory}`;
           
           try {
-            // Usar invalidateCache para chave específica
             await invalidateCache(fastify, cachePath);
           } catch (cacheError) {
             console.error('Error invalidating cache:', cacheError);
@@ -128,10 +125,9 @@ async function fileRoutes(fastify: FastifyInstance) {
         // Invalidate cache first, then send response
         if (result && request.params.actionId) {
           const cacheCategory = fileController.getCacheCategory(result.category);
-          const cachePath = `cache:actions:${request.params.actionId}:files:${cacheCategory}`;
+          const cachePath = `actions:${request.params.actionId}:files:${cacheCategory}`;
           
           try {
-            // Usar invalidateCache para chave específica
             await invalidateCache(fastify, cachePath);
           } catch (cacheError) {
             console.error('Error invalidating cache:', cacheError);
@@ -161,7 +157,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngImages(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:images`;
@@ -178,7 +174,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngVideos(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:videos`;
@@ -195,7 +191,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngReportFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:reports`;
@@ -212,7 +208,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngTaxInvoicesFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:tax_invoices`;
@@ -229,7 +225,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngOtherFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:others`;
@@ -247,7 +243,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionImages(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:images`;
@@ -264,7 +260,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionVideos(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:videos`;
@@ -281,7 +277,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionReportFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:reports`;
@@ -298,7 +294,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionTaxInvoicesFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:tax_invoices`;
@@ -315,7 +311,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionOtherFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 604800,
+        ttl: 84600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:others`;
@@ -324,17 +320,6 @@ async function fileRoutes(fastify: FastifyInstance) {
       }
     )
   );
-  
-  // Adicionar hook para limpar caches antigos na inicialização (mantém invalidateCachePattern aqui pois é um padrão real)
-  fastify.addHook('onReady', async () => {
-    try {
-      // Limpar caches antigos em formato /ongs/...
-      await invalidateCachePattern(fastify, `cache:/ongs/*`);
-      fastify.log.info('Caches antigos de arquivos foram invalidados durante a inicialização');
-    } catch (err) {
-      fastify.log.error('Erro ao limpar caches antigos:', err);
-    }
-  });
 }
 
 export { fileRoutes };

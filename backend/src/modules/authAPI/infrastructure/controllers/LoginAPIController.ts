@@ -1,29 +1,31 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { AuthController } from "@modules/authAPI";
-import { CustomError } from "@shared/customError";
 
 class LoginAPIController {
-  private authController: AuthController;
+  private readonly authController: AuthController;
 
   constructor(authController: AuthController) {
     this.authController = authController;
   }
 
   async handle(request: FastifyRequest, reply: FastifyReply) {
-    const { email, password } = request.body as { email: string; password: string };
-
     try {
-      const { user, ngo, token, actions } = await this.authController.authenticate(email, password);
-
-      reply.send({ message: "Login bem-sucedido", user, token, ngo, actions }); 
-    } catch (error) {
-      console.error("Error durante o no LoginController login:", error);
-
-      if (error instanceof CustomError) {
-        reply.status(error.statusCode).send({ error: error.message });
-      } else {
-        reply.status(500).send({ error: "Erro ao processar login no LoginController" });
-      }
+      const { email, password } = request.body as { email: string; password: string };
+      
+      const authResult = await this.authController.authenticate(email, password);
+      
+      // Garantir que a resposta siga o formato esperado pelo schema
+      const response = {
+        message: "Login bem-sucedido", 
+        token: authResult.token,
+        user: authResult.user,
+        ngo: authResult.ngo,
+        actions: authResult.actions || []
+      };
+      
+      return reply.send(response);
+    } catch (error: any) {
+      return reply.status(error.statusCode || 500).send({ error: error.message });
     }
   }
 }

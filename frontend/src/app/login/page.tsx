@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import boraImpactar from "../../assets/bora_impactar.svg";
 import { Checkbox } from "@/components/ui/checkbox";
-
+import { API } from "@/config/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,13 +18,12 @@ export default function LoginPage() {
   const router = useRouter();
   const [rememberMe, setRememberMe] = useState(true);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:3333/login", {
+      const response = await fetch(API.login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -48,7 +47,6 @@ export default function LoginPage() {
           Cookies.set("auth_token", data.token, { secure: true, sameSite: "Strict" });
         }
       }
-      
 
       if (data.user?.name) {
         Cookies.set("user_name", data.user.name);
@@ -154,20 +152,19 @@ export default function LoginPage() {
 
             <div className="flex justify-between text-sm text-blue-600 underline mt-6">
               <div className="flex items-center gap-3 mt-2">
-                  <Checkbox
-                    id="remember-me"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
-                    className="w-5 h-5 border-2 border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white transition-colors duration-200"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="text-sm font-medium text-gray-700 leading-none select-none"
-                  >
-                    Lembrar-me
-                  </label>
-                </div>
-                  
+                <Checkbox
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+                  className="w-5 h-5 border-2 border-blue-400 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white transition-colors duration-200"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="text-sm font-medium text-gray-700 leading-none select-none"
+                >
+                  Lembrar-me
+                </label>
+              </div>
             </div>
 
             <div className="relative my-8">

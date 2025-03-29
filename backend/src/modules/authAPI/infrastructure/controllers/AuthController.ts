@@ -4,6 +4,8 @@ import { JWTService } from "@shared/jwtService";
 import { CreateUserService, GetUserService } from "@modules/user";
 import { CreateOngService, GetOngService } from "@modules/ong";
 import { GetActionService } from "@modules/action";
+import { FastifyInstance } from "fastify";
+import { invalidateCache } from "@middlewares/cacheMiddleware";
 
 class AuthController {
   private getExternalDataService: GetExternalDataService;
@@ -13,6 +15,7 @@ class AuthController {
   private getOngService: GetOngService;
   private getActionService: GetActionService;
   private jwtService: JWTService;
+  private fastify: FastifyInstance;
 
   constructor(
     getExternalDataService: GetExternalDataService,
@@ -21,7 +24,8 @@ class AuthController {
     createOngService: CreateOngService,
     getOngService: GetOngService,
     getActionService: GetActionService,
-    jwtService: JWTService
+    jwtService: JWTService,
+    fastify: FastifyInstance
   ) {
     this.getExternalDataService = getExternalDataService;
     this.createUserService = createUserService;
@@ -30,6 +34,7 @@ class AuthController {
     this.getOngService = getOngService;
     this.getActionService = getActionService;
     this.jwtService = jwtService;
+    this.fastify = fastify;
   }
 
   async authenticate(email: string, password: string) {
@@ -44,6 +49,7 @@ class AuthController {
       const userData = data.user;
 
       let ngo = await this.getOngService.executeById(ngoData.id);
+      let isNewNgo = false;
 
       if (!ngo) {
         ngo = await this.createOngService.execute({
@@ -63,6 +69,11 @@ class AuthController {
           causes: ngoData.causes,
           sustainable_development_goals: ngoData.sustainable_development_goals,
         });
+        isNewNgo = true;
+        
+        // Invalidar o cache da lista de ONGs quando uma nova ONG é criada
+        await invalidateCache(this.fastify, `ongs:list`);
+        this.fastify.log.info(`Cache de lista de ONGs invalidado após criação da ONG ${ngoData.id}`);
       }
 
       let user = await this.getUserService.executeByEmail(userData.email);

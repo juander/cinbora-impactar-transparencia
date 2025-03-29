@@ -38,9 +38,9 @@ async function ongRoutes(fastify: FastifyInstance) {
   // Rota para atualizar o gráfico da ONG
   fastify.put("/ongs/grafic", { preHandler: [authMiddleware], schema: updateNgoGraficSchema }, async (request, reply) => {
     const result = await ongController.updateNgoGrafic(request);
-    // Invalidar apenas o gráfico específico em vez de todos os caches
+    // Chave padronizada sem prefixo 'cache:' (será adicionado pelo invalidateCache)
     const ongId = (request.body as any).id;
-    await invalidateCache(fastify, `cache:ong:${ongId}:with-grafic`);
+    await invalidateCache(fastify, `ong:${ongId}:with-grafic`);
     return reply.send(result);
   });
 
@@ -55,7 +55,7 @@ async function ongRoutes(fastify: FastifyInstance) {
         return reply.send(ngos);
       },
       { 
-        ttl: 2592000, // Cache por 30 dias
+        ttl: 84600, // Cache por 1 dia
         keyGenerator: () => `ongs:list`, // Chave específica e simples
         tags: ['ongs']
       }
@@ -66,10 +66,10 @@ async function ongRoutes(fastify: FastifyInstance) {
   fastify.delete<{ Params: OngParams }>("/ongs/:id", { preHandler: [authMiddleware], schema: deleteOngSchema }, async (request, reply) => {
     const result = await ongController.delete(request);
     
-    // Invalidar apenas as chaves específicas em vez de um padrão amplo
+    // Chaves padronizadas
     await Promise.all([
-      invalidateCache(fastify, `cache:ong:${request.params.ngoId}:with-grafic`),
-      invalidateCache(fastify, `cache:ongs:list`)
+      invalidateCache(fastify, `ong:${request.params.ngoId}:with-grafic`),
+      invalidateCache(fastify, `ongs:list`)
     ]);
     
     return reply.send(result);
@@ -79,8 +79,8 @@ async function ongRoutes(fastify: FastifyInstance) {
   fastify.post("/ongs", { preHandler: [authMiddleware], schema: createOngSchema }, async (request, reply) => {
     const ong = await ongController.create(request);
     
-    // Invalidar apenas a lista de ONGs, não os detalhes individuais
-    await invalidateCache(fastify, `cache:ongs:list`);
+    // Chave padronizada
+    await invalidateCache(fastify, `ongs:list`);
     
     return reply.status(201).send(ong);
   });
@@ -90,10 +90,10 @@ async function ongRoutes(fastify: FastifyInstance) {
     const result = await ongController.update(request);
     const ongId = (request.body as any).id;
     
-    // Invalidar apenas as chaves específicas afetadas
+    // Chaves padronizadas
     await Promise.all([
-      invalidateCache(fastify, `cache:ong:${ongId}:with-grafic`),
-      invalidateCache(fastify, `cache:ongs:list`)
+      invalidateCache(fastify, `ong:${ongId}:with-grafic`),
+      invalidateCache(fastify, `ongs:list`)
     ]);
     
     return reply.send(result);

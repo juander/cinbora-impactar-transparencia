@@ -6,7 +6,8 @@ import { GetActionService, ActionRepository } from "@modules/action";
 import { JWTService } from "@shared/jwtService";
 import { LoginAPIController } from "@modules/authAPI"
 import { deleteFileService } from '@config/dependencysInjection/fileDependencyInjection';
-import S3Storage from '@shared/s3Storage';;
+import S3Storage from '@shared/s3Storage';
+import { FastifyInstance } from "fastify";
 
 const getExternalDataService = new GetExternalDataService();
 const s3Storage = new S3Storage();
@@ -24,16 +25,23 @@ const getOngService = new GetOngService(ongRepository);
 const getActionService = new GetActionService(actionRepository);
 const jwtService = new JWTService();
 
-const authController = new AuthController(
-  getExternalDataService,
-  createUserService,
-  getUserService,
-  createOngService,
-  getOngService,
-  getActionService,
-  jwtService
-);
+// Modificamos para receber o fastify como parâmetro
+export function getAuthController(fastify: FastifyInstance) {
+  return new AuthController(
+    getExternalDataService,
+    createUserService,
+    getUserService,
+    createOngService,
+    getOngService,
+    getActionService,
+    jwtService,
+    fastify
+  );
+}
 
-const loginAPIController = new LoginAPIController(authController);
+// Precisamos atualizar para utilizar a função getAuthController
+export function getLoginAPIController(fastify: FastifyInstance) {
+  return new LoginAPIController(getAuthController(fastify));
+}
 
-export { getExternalDataService, authController, loginAPIController };
+export { getExternalDataService };

@@ -1,49 +1,49 @@
 services:
-  # MongoDB with replica set
-  mongo:
-    container_name: mongo
+  # MongoDB com replica set
+  mongodb:
+    container_name: cinbora-mongodb
     build: ./backend/mongodb_rs
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongo
-      MONGO_INITDB_ROOT_PASSWORD: example
-      MONGO_INITDB_DATABASE: mongo
-      MONGO_REPLICA_HOST: mongo
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+      MONGO_REPLICA_HOST: cinbora-mongodb
       MONGO_REPLICA_PORT: 27017
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - cinbora_mongodb_data:/data/db
     networks:
       - app-network
     healthcheck:
-      test: mongosh admin -u mongo -p example --eval "rs.status().ok === 1 && db.runCommand('ping').ok === 1" || exit 1
+      test: mongosh admin -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD} --eval "rs.status().ok === 1 && db.runCommand('ping').ok === 1" || exit 1
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 60s
 
-  # Combined frontend/backend application
+  # Aplicação combinada frontend/backend
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    image: cinbora-transparencia:latest
-    container_name: cinbora-transparencia
+    image: cinbora-app:${APP_VERSION}
+    container_name: cinbora-app
     ports:
-      - "3000:3000"  # Frontend
-      - "3333:3333"  # Backend
+      - "3005:3000"  # Frontend 
+      - "3015:3333"  # Backend 
     environment:
       NODE_ENV: production
-      # Connection string for MongoDB replica set with proper authentication
-      DATABASE_URL: mongodb://mongo:example@mongo:27017/mongo?authSource=admin&directConnection=true&replicaSet=rs0
-      FRONTEND_URL: http://localhost:3000
+      DATABASE_URL: ${DATABASE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      NEXT_PUBLIC_API_URL: http://localhost:3015  # URL para o frontend acessar o backend
     env_file:
-      - .env
+      - ${ENV_FILE:-.env}  
     networks:
       - app-network
     depends_on:
-      mongo:
+      mongodb:
         condition: service_healthy
     restart: unless-stopped
     logging:
@@ -51,11 +51,18 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3005 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   app-network:
+    name: cinbora-network
     driver: bridge
 
 volumes:
-  mongodb_data:
-    name: cinbora-mongodb-data
+  cinbora_mongodb_data:
+    name: cinbora_mongodb_data

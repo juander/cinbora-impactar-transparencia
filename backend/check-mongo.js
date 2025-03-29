@@ -1,28 +1,65 @@
-// This script checks if MongoDB is available before starting the application
+// Este script verifica se o MongoDB está disponível antes de iniciar a aplicação
 const { MongoClient } = require('mongodb');
 
 async function checkMongo() {
   const uri = process.env.DATABASE_URL;
-  const client = new MongoClient(uri);
+  if (!uri) {
+    console.error('DATABASE_URL não definida no ambiente');
+    process.exit(1);
+  }
+
+  const client = new MongoClient(uri, {
+    serverSelectionTimeoutMS: 5000, // 5 segundos timeout para seleção de servidor
+    connectTimeoutMS: 10000,        // 10 segundos timeout para conexão
+  });
   
   try {
-    console.log('Checking MongoDB connection...');
-    await client.connect();
-    const result = await client.db('admin').command({ ping: 1 });
+    console.log('Verificando conexão com MongoDB...');
     
-    if (result.ok === 1) {
-      console.log('MongoDB connection successful!');
+    // Conectar ao MongoDB
+    await client.connect();
+    console.log('Conexão estabelecida com MongoDB');
+    
+    // Verificar status do replica set
+    const admin = client.db('admin');
+    
+    // Verificar se o replica set está configurado corretamente
+    const rsStatus = await admin.command({ replSetGetStatus: 1 }).catch(e => ({ ok: 0, error: e.message }));
+    if (rsStatus.ok !== 1) {
+      console.error('Replica set não está configurado corretamente:', rsStatus.error || 'Status desconhecido');
+      process.exit(1);
+    }
+    console.log('Replica set está configurado corretamente');
+    
+    // Verificar ping
+    const pingResult = await admin.command({ ping: 1 });
+    if (pingResult.ok === 1) {
+      console.log('Ping ao MongoDB bem-sucedido!');
+      
+      // Verificar se podemos acessar o banco de dados da aplicação
+      const appDb = client.db('cinbora_db');
+      await appDb.command({ dbStats: 1 });
+      console.log('Banco de dados da aplicação acessível');
+      
       process.exit(0);
     } else {
-      console.error('MongoDB ping command failed');
+      console.error('Falha no comando ping do MongoDB');
       process.exit(1);
     }
   } catch (err) {
-    console.error('Error connecting to MongoDB:', err);
+    console.error('Erro ao conectar ao MongoDB:', err.message);
+    if (err.name === 'MongoServerSelectionError') {
+      console.error('Não foi possível selecionar um servidor MongoDB. Verifique se o servidor está em execução.');
+    }
     process.exit(1);
   } finally {
-    await client.close();
+    try {
+      await client.close();
+    } catch (err) {
+      console.error('Erro ao fechar conexão MongoDB:', err.message);
+    }
   }
 }
 
+// Executar a verificação
 checkMongo();

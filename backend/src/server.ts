@@ -10,7 +10,6 @@ import { validatorCompiler, serializerCompiler, type ZodTypeProvider, jsonSchema
 import fastifyMultipart from "@fastify/multipart"; 
 import { CustomError } from '@shared/customError';
 import { Prisma } from "@prisma/client";
-import redisClient, { localCache } from "@shared/redisClient";
 
 const server = Fastify({ 
   logger: true,
@@ -40,7 +39,8 @@ server.setErrorHandler((error, request, reply) => {
 
 const start = async () => {
   await server.register(cors, {
-    origin: config.nodeEnv === 'development' ? 'http://localhost:3000' : config.frontendUrl,
+    origin: [config.frontendUrl || 'http://localhost:3005'],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -74,35 +74,6 @@ const start = async () => {
       fileSize: 10 * 1024 * 1024, // Limite de tamanho de arquivo de 10 MB
     },
   });
-
-  console.log("Verificando conexão com Redis Upstash...");
-  try {
-    // Método ping simples em vez de set/get - economiza um comando
-    await redisClient.ping();
-    console.log("Conexão com Redis estabelecida com sucesso");
-    
-    // Decorador do cliente Redis otimizado
-    server.decorate('redis', redisClient);
-    
-    // Adicionar método helper para limpar todo o cache - otimizado
-    server.decorate('clearAllCache', async () => {
-      try {
-        // Limpar cache local imediatamente
-        localCache.flushAll();
-        
-        // Limpar cache Redis de forma eficiente
-        await redisClient.delByPattern('cache:*');
-        server.log.info('Cache limpo com sucesso');
-        return true;
-      } catch (err) {
-        server.log.error(`Erro ao limpar cache: ${err}`);
-        return false;
-      }
-    });
-  } catch (err) {
-    console.error("Erro ao conectar ao Redis Upstash:", err);
-    process.exit(1);
-  }
   
   await server.register(routes);
 

@@ -3,10 +3,10 @@ module.exports = {
     {
       name: "backend",
       cwd: "/app/backend",
-      script: "./start.sh",  // Usar o script de inicialização
+      script: "./start.sh",
       env: {
         NODE_ENV: "production",
-        PORT: "3333",
+        PORT: "3333",  
       },
     },
     {
@@ -16,7 +16,7 @@ module.exports = {
       args: "server.js",
       env: {
         NODE_ENV: "production",
-        PORT: "3000",
+        PORT: "3000",  
         HOSTNAME: "0.0.0.0",
       },
     },

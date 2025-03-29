@@ -3,7 +3,7 @@ import { createActionSchema, updateActionSchema, deleteActionSchema } from "../s
 import { authMiddleware } from "@middlewares/authMiddleware";
 import { OngParams, OngActionParams, ActionParams } from "@routeParams/RouteParams";
 import { actionController } from "@config/dependencysInjection/actionDependencyInjection";
-import { cachedRoute, invalidateCache, invalidateCachePattern } from "@middlewares/cacheMiddleware";
+import { cachedRoute, invalidateCache } from "@middlewares/cacheMiddleware";
 
 async function actionRoutes(fastify: FastifyInstance) {
 
@@ -17,7 +17,7 @@ async function actionRoutes(fastify: FastifyInstance) {
         return reply.send(result);
       },
       { 
-        ttl: 604800, // Cache de 1 semana
+        ttl: 84600, // Cache de 1 dia
         keyGenerator: (req) => {
           const params = req.params as OngActionParams;
           return `actions:${params.actionId}:with-expenses`;
@@ -37,7 +37,7 @@ async function actionRoutes(fastify: FastifyInstance) {
         return reply.send(actions);
       },
       { 
-        ttl: 1296000, // Cache por 15 dias
+        ttl: 84600, // Cache por 1 dia
         keyGenerator: (req) => {
           // Usar o parâmetro como está na URL
           const params = req.params as { id: number };
@@ -55,8 +55,8 @@ async function actionRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await actionController.create(request);
       if (request.user) {
-        // Invalidar o cache das ações da ONG após criar uma nova ação
-        await invalidateCache(fastify, `cache:ongs:${request.user.ngoId}:actions:list`);
+        // Chave padronizada - sem 'cache:' prefixo (será adicionado pelo invalidateCache)
+        await invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`);
       }
       return reply.status(201).send(result);
     }
@@ -69,12 +69,11 @@ async function actionRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await actionController.update(request);
       if (request.user) {
-        // CORREÇÃO: Usar o parâmetro correto da URL
         const actionId = request.params.actionId;
-        // Invalidações específicas
+        // Chaves padronizadas - sem prefixo 'cache:'
         await Promise.all([
-          invalidateCache(fastify, `cache:actions:${actionId}:with-expenses`),
-          invalidateCache(fastify, `cache:ongs:${request.user.ngoId}:actions:list`)
+          invalidateCache(fastify, `actions:${actionId}:with-expenses`),
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`)
         ]);
       }
       return reply.send(result);
@@ -88,12 +87,11 @@ async function actionRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await actionController.delete(request);
       if (request.user) {
-        // CORREÇÃO: Usar o parâmetro correto da URL
         const actionId = request.params.actionId;
-        // Invalidações específicas
+        // Chaves padronizadas - sem prefixo 'cache:'
         await Promise.all([
-          invalidateCache(fastify, `cache:actions:${actionId}:with-expenses`),
-          invalidateCache(fastify, `cache:ongs:${request.user.ngoId}:actions:list`)
+          invalidateCache(fastify, `actions:${actionId}:with-expenses`),
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`)
         ]);
       }
       return reply.send(result);
@@ -108,12 +106,11 @@ async function actionRoutes(fastify: FastifyInstance) {
       const result = await actionController.updateActionExpensesGrafic(request);
       if (request.user) {
         const actionId = request.params.actionId;
-        // Invalidações precisas e otimizadas
+        // Chaves padronizadas
         await Promise.all([
-          invalidateCache(fastify, `cache:actions:${actionId}:with-expenses`),
-          invalidateCache(fastify, `cache:ongs:${request.user.ngoId}:actions:list`),
-          // Invalidar também o gráfico da ONG se ele depender dos gráficos de ações
-          invalidateCache(fastify, `cache:ong:${request.user.ngoId}:with-grafic`)
+          invalidateCache(fastify, `actions:${actionId}:with-expenses`),
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`),
+          invalidateCache(fastify, `ong:${request.user.ngoId}:with-grafic`)
         ]);
       }
       return reply.send(result);
@@ -127,25 +124,16 @@ async function actionRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await actionController.updateActionImage(request);
       if (request.user) {
-        // CORREÇÃO: Usar o parâmetro correto da URL
         const actionId = request.params.actionId;
-        // Invalidações específicas
+        // Chaves padronizadas - sem prefixo 'cache:'
         await Promise.all([
-          invalidateCache(fastify, `cache:actions:${actionId}:with-expenses`),
-          invalidateCache(fastify, `cache:ongs:${request.user.ngoId}:actions:list`)
+          invalidateCache(fastify, `actions:${actionId}:with-expenses`),
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`)
         ]);
       }
       return reply.send(result);
     }
   );
-  
-  // Adicionar suporte para invalidação de cache antiga durante a transição
-  // Mantém invalidateCachePattern aqui pois é um padrão real
-  fastify.addHook('onReady', async () => {
-    // Limpar caches antigos em formato /ongs/...
-    await invalidateCachePattern(fastify, `cache:/ongs/*`);
-    fastify.log.info('Caches antigos foram invalidados durante a inicialização');
-  });
 }
 
 export { actionRoutes };

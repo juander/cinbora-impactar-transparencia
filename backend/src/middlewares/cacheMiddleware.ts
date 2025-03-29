@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
-import { localCache, registerKey } from "@shared/redisClient";
+import { localCache, registerKey } from "@shared/cacheClient";
+import cacheClient from "@shared/cacheClient";
 
 interface CacheOptions {
   /** Tempo de expiração em segundos */
@@ -14,7 +15,7 @@ interface CacheOptions {
 
 /**
  * Middleware para armazenar em cache o resultado de uma rota
- * @param fastify Instância do Fastify com Redis
+ * @param fastify Instância do Fastify
  * @param options Opções de configuração do cache
  */
 export function withCache(
@@ -31,31 +32,17 @@ export function withCache(
     }
 
     try {
-      // Gerar a chave de cache
+      // Gerar a chave de cache com prefixo padronizado
       const cacheKey = options.keyGenerator
         ? `${prefix}:${options.keyGenerator(request)}`
-        : `${prefix}:${request.url.split('?')[0]}`; // Remove parâmetros de consulta para reduzir variações
+        : `${prefix}:${request.url.split('?')[0].replace(/\//g, ':')}`;
       
-      // Verificar primeiro no cache local (economiza um comando Redis)
-      const localData = localCache.get(cacheKey);
+      // Verificar no cache local
+      const cachedData = await cacheClient.get(cacheKey);
       
-      if (localData) {
-        // HIT no cache local - nenhum comando Redis usado!
-        reply.header('x-cache', 'LOCAL-HIT');
-        reply.header('x-cache-key', cacheKey);
-        reply.send(localData);
-        return true; // Sinaliza que a resposta foi manipulada
-      }
-
-      // Verificar se há dados em cache no Redis
-      const cachedData = await fastify.redis.get(cacheKey);
-
       if (cachedData) {
-        // Armazena no cache local também, para economizar futuras buscas
-        localCache.set(cacheKey, cachedData, ttl);
-        
-        // Se encontrou dados no cache, responde imediatamente
-        reply.header('x-cache', 'REDIS-HIT');
+        // HIT no cache
+        reply.header('x-cache', 'HIT');
         reply.header('x-cache-key', cacheKey);
         reply.send(cachedData);
         return true; // Sinaliza que a resposta foi manipulada
@@ -82,7 +69,7 @@ export function withCache(
             registerKey(cacheKey, patterns);
             
             // Armazenar no cache
-            fastify.redis.set(cacheKey, plainData, { ex: ttl });
+            cacheClient.set(cacheKey, plainData, { ex: ttl });
             
             // Adicionar cabeçalhos informativos
             reply.header('x-cache', 'MISS');
@@ -113,23 +100,40 @@ export function withCache(
 }
 
 /**
+ * Normaliza uma chave de cache para garantir o prefixo correto
+ * @param key Chave de cache para normalizar
+ */
+function normalizeKey(key: string): string {
+  // Se a chave já começa com 'cache:', retorna como está
+  if (key.startsWith('cache:')) {
+    return key;
+  }
+  // Se não, adiciona o prefixo 'cache:'
+  return `cache:${key}`;
+}
+
+/**
  * Invalida uma chave de cache específica
  * @param fastify Instância Fastify
  * @param key Chave a ser invalidada
  */
 export async function invalidateCache(fastify: FastifyInstance, key: string): Promise<void> {
-  await fastify.redis.del(key);
-  fastify.log.info(`Cache invalidado: ${key}`);
+  const normalizedKey = normalizeKey(key);
+  await cacheClient.del(normalizedKey);
+  fastify.log.info(`Cache invalidado: ${normalizedKey}`);
 }
 
 /**
- * Invalida várias chaves de cache que correspondem a um padrão - agora otimizado
+ * Invalida várias chaves de cache que correspondem a um padrão
  * @param fastify Instância Fastify
  * @param pattern Padrão para correspondência (ex: 'cache:ongs:*')
+ * @returns Número de chaves invalidadas
  */
-export async function invalidateCachePattern(fastify: FastifyInstance, pattern: string): Promise<void> {
-  const count = await fastify.redis.delByPattern(pattern);
-  fastify.log.info(`Cache invalidado por padrão: ${pattern} (${count} chaves)`);
+export async function invalidateCachePattern(fastify: FastifyInstance, pattern: string): Promise<number> {
+  const normalizedPattern = normalizeKey(pattern);
+  const count = await cacheClient.delByPattern(normalizedPattern);
+  fastify.log.info(`Cache invalidado por padrão: ${normalizedPattern} (${count} chaves)`);
+  return count; // Retornar contagem para uso em outras funções
 }
 
 /**
