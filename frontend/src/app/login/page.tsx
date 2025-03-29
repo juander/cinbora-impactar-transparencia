@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import Image from "next/image";
 import boraImpactar from "../../assets/bora_impactar.svg";
 import { Checkbox } from "@/components/ui/checkbox";
-import { API } from "@/config/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,7 +22,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(API.login, {
+      const response = await fetch(`http://127.0.0.1:3333/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
