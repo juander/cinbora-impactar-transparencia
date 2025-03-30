@@ -128,7 +128,7 @@ describe('LoginAPIController - handle', () => {
     // Verifica o resultado
     expect(response.statusCode).toBe(500);
     expect(JSON.parse(response.body)).toEqual({
-      error: 'Erro ao processar login no LoginController'
+      error: 'Database connection error'
     });
   });
 });

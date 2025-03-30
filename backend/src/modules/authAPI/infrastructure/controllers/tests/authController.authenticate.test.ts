@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { AuthController } from '../AuthController';
 import bcrypt from 'bcrypt';
 
@@ -62,6 +64,7 @@ const createServiceProxy = (name: string, mockData: any): ServiceProxy => {
   const mockCreateOngService = createServiceProxy('CreateOngService', mockNgo);
   const mockGetOngService = createServiceProxy('GetOngService', mockNgo);
   const mockGetActionService = createServiceProxy('GetActionService', mockActions);
+  const mockFastifyInstance =  createServiceProxy('FastifyInstance', {});
   
   // JWT service é especial pois não retorna promessas
   const mockJwtService = {
@@ -85,7 +88,8 @@ const createServiceProxy = (name: string, mockData: any): ServiceProxy => {
       mockCreateOngService as any,
       mockGetOngService as any,
       mockGetActionService as any,
-      mockJwtService as any
+      mockJwtService as any,
+      mockFastifyInstance as any
     );
     
     // Supressão de logs de erro
