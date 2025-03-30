@@ -6,6 +6,7 @@ import Link from "next/link";
 import Cookies from "js-cookie";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { API_BASE_URL } from "@/config/api"
 import {
   Menubar,
   MenubarMenu,
@@ -39,7 +40,7 @@ export default function Header() {
         if (!fetchedOnce.current) {
           fetchedOnce.current = true;
 
-          fetch("http://127.0.0.1:3333/user", {
+          fetch(`${API_BASE_URL}/user`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,

@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/ui/toast-provider";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 import "./globals.css";
 import { useEffect } from "react"
+import { API_BASE_URL } from "@/config/api"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 

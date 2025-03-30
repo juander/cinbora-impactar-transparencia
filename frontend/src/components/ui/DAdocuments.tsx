@@ -6,6 +6,7 @@ import arrowDown from "../../assets/downArrow.svg";
 import download from "../../assets/Documents.svg";
 import { UploadCloud, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/config/api"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,15 +80,15 @@ export default function DADocuments() {
 
   const getFiles = () => {
     if (action_id) {
-      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/others`)
+      fetch(`${API_BASE_URL}/ongs/actions/${action_id}/files/others`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar outros arquivos"); return response.json(); })
         .then(data => setOthers(data))
         .catch(err => console.error(err));
-      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/tax_invoices`)
+      fetch(`${API_BASE_URL}/ongs/actions/${action_id}/files/tax_invoices`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar notas fiscais"); return response.json(); })
         .then(data => setTaxInvoices(data))
         .catch(err => console.error(err));
-      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/reports`)
+      fetch(`${API_BASE_URL}/ongs/actions/${action_id}/files/reports`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar relatórios"); return response.json(); })
         .then(data => setReports(data))
         .catch(err => console.error(err));
@@ -117,7 +118,7 @@ export default function DADocuments() {
       formData.append("file", file);
       formData.append("category", uploadCategory);
       try {
-        const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/upload`, {
+        const response = await fetch(`${API_BASE_URL}/ongs/actions/${action_id}/files/upload`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData,
@@ -148,7 +149,7 @@ export default function DADocuments() {
       return;
     }
     try {
-      const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/${fileId}`, {
+      const response = await fetch(`${API_BASE_URL}/ongs/actions/${action_id}/files/${fileId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

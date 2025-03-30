@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { API_BASE_URL } from "@/config/api"
 import { useSearchParams } from "next/navigation"
 import {
   LineChart,

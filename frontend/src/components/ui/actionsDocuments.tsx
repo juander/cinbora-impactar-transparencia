@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import arrowDown from "../../assets/downArrow.svg";
 import download from "../../assets/Documents.svg";
+import { API_BASE_URL } from "@/config/api"
+
 
 // Add proper type for file data
 interface FileData {
@@ -61,15 +63,15 @@ export default function ActionsDocuments() {
 
   const getFiles = () => {
     if (actionId) {
-      fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/others`)
+      fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/others`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar outros arquivos"); return response.json(); })
         .then(data => setOthers(data))
         .catch(err => console.error(err));
-      fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/tax_invoices`)
+      fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/tax_invoices`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar notas fiscais"); return response.json(); })
         .then(data => setTaxInvoices(data))
         .catch(err => console.error(err));
-      fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/reports`)
+      fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/reports`)
         .then(response => { if (!response.ok) throw new Error("Erro ao buscar relatórios"); return response.json(); })
         .then(data => setReports(data))
         .catch(err => console.error(err));

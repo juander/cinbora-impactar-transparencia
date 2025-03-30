@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Camera, Video } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/config/api"
 
 interface MediaItem {
 	id: string;
@@ -22,7 +23,7 @@ export default function VisitorGallery() {
 		if (!ongsId) return;
 		const fetchImages = async () => {
 			try {
-				const res = await fetch(`http://127.0.0.1:3333/ongs/${ongsId}/files/images`);
+				const res = await fetch(`${API_BASE_URL}/ongs/${ongsId}/files/images`);
 				const data = await res.json();
 				setImages(data);
 			} catch (error) {
@@ -31,7 +32,7 @@ export default function VisitorGallery() {
 		};
 		const fetchVideos = async () => {
 			try {
-				const res = await fetch(`http://127.0.0.1:3333/ongs/${ongsId}/files/videos`);
+				const res = await fetch(`${API_BASE_URL}/ongs/${ongsId}/files/videos`);
 				const data = await res.json();
 				const videosArr = data.data ? data.data : (Array.isArray(data) ? data : [data]);
 				setVideos(videosArr);

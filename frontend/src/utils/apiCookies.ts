@@ -17,3 +17,4 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
 
   return response.json();
 }
+

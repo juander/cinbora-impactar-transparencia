@@ -7,6 +7,7 @@ import download from "../../assets/Documents.svg";
 import { UploadCloud, Trash2 } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/config/api"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,7 +79,7 @@ export default function Documents() {
   const getFiles = () => {
     const ngoId = Cookies.get("ngo_id");
     if (ngoId) {
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/others`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/others`)
         .then(response => {
           if (!response.ok) throw new Error("Erro ao buscar outros arquivos");
           return response.json();
@@ -86,7 +87,7 @@ export default function Documents() {
         .then(data => setOthers(deduplicate(data)))
         .catch(err => console.error(err));
 
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/tax_invoices`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/tax_invoices`)
         .then(response => {
           if (!response.ok) throw new Error("Erro ao buscar notas fiscais");
           return response.json();
@@ -94,7 +95,7 @@ export default function Documents() {
         .then(data => setTaxInvoices(deduplicate(data)))
         .catch(err => console.error(err));
 
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/reports`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/reports`)
         .then(response => {
           if (!response.ok) throw new Error("Erro ao buscar relatórios");
           return response.json();
@@ -129,7 +130,7 @@ export default function Documents() {
       formData.append("file", file);
       formData.append("category", uploadCategory);
       try {
-        const response = await fetch(`http://127.0.0.1:3333/ongs/files/upload`, {
+        const response = await fetch(`${API_BASE_URL}/ongs/files/upload`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
           body: formData,
@@ -160,7 +161,7 @@ export default function Documents() {
       return;
     }
     try {
-      const response = await fetch(`http://127.0.0.1:3333/ongs/files/${fileId}`, {
+      const response = await fetch(`${API_BASE_URL}/ongs/files/${fileId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

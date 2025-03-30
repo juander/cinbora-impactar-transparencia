@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import arrowDown from "../../assets/downArrow.svg";
 import download from "../../assets/Documents.svg";
+import { API_BASE_URL } from "@/config/api"
 
 interface FileObject {
   id: string;
@@ -60,7 +61,7 @@ export default function VisitorDocuments() {
 
   const getFiles = () => {
     if (ngoId) {
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/others`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/others`)
         .then((response) => {
           if (!response.ok) throw new Error("Erro ao buscar outros arquivos");
           return response.json();
@@ -68,7 +69,7 @@ export default function VisitorDocuments() {
         .then((data: FileObject[]) => setOthers(data))
         .catch((err) => console.error(err));
 
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/tax_invoices`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/tax_invoices`)
         .then((response) => {
           if (!response.ok) throw new Error("Erro ao buscar notas fiscais");
           return response.json();
@@ -76,7 +77,7 @@ export default function VisitorDocuments() {
         .then((data: FileObject[]) => setTaxInvoices(data))
         .catch((err) => console.error(err));
 
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}/files/reports`)
+      fetch(`${API_BASE_URL}/ongs/${ngoId}/files/reports`)
         .then((response) => {
           if (!response.ok) throw new Error("Erro ao buscar relatórios");
           return response.json();

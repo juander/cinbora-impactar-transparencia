@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { API_BASE_URL } from "@/config/api"
 import { FaChevronDown } from "react-icons/fa";
 import {
   DropdownMenu,
@@ -80,7 +81,7 @@ export default function Balance() {
     const ngoId = searchParams.get("ngo_id");
     if (!ngoId) return;
   
-    fetch(`http://127.0.0.1:3333/ongs/${ngoId}`)
+    fetch(`${API_BASE_URL}/ongs/${ngoId}`)
       .then((res) => res.json())
       .then((response: NgoData) => {
         setApiData(response);

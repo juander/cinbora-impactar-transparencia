@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { API_BASE_URL } from "@/config/api"
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -62,7 +63,7 @@ export function UserSidebar({
 
   useEffect(() => {
     if (isOpen && authToken) {
-      fetch("http://127.0.0.1:3333/user", {
+      fetch(`${API_BASE_URL}/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -89,7 +90,7 @@ export function UserSidebar({
 
   useEffect(() => {
     if (showEditProfileModal && authToken) {
-      fetch("http://127.0.0.1:3333/user", {
+      fetch(`${API_BASE_URL}/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -114,7 +115,7 @@ export function UserSidebar({
 
   useEffect(() => {
     if (showEditOngModal && authToken && ngoId) {
-      fetch(`http://127.0.0.1:3333/ongs/${ngoId}`, {
+      fetch(`${API_BASE_URL}/ongs/${ngoId}`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
@@ -135,7 +136,7 @@ export function UserSidebar({
 
   const fetchUserData = useCallback(() => {
     if (authToken) {
-      fetch("http://127.0.0.1:3333/user", {
+      fetch(`${API_BASE_URL}/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${authToken}`,
@@ -156,7 +157,7 @@ export function UserSidebar({
         });
   
       if (ngoId) {
-        fetch(`http://127.0.0.1:3333/ongs/${ngoId}/actions`, {
+        fetch(`${API_BASE_URL}/ongs/${ngoId}/actions`, {
           headers: { Authorization: `Bearer ${authToken}` },
         })
           .then((res) => res.json())
@@ -194,7 +195,7 @@ export function UserSidebar({
       if (!isNaN(ano)) payload.start_year = ano;
     }
 
-    fetch("http://127.0.0.1:3333/ongs", {
+    fetch(`${API_BASE_URL}/ongs`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -228,7 +229,7 @@ export function UserSidebar({
     formData.append("profileUrl", newProfileFile);
 
     try {
-      const updateRes = await fetch("http://127.0.0.1:3333/users/profile", {
+      const updateRes = await fetch(`${API_BASE_URL}/users/profile`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${authToken}`,

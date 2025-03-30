@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import Cookies from "js-cookie";
+import { API_BASE_URL } from "@/config/api"
 
 interface LogChanges {
   name?: string;
@@ -65,7 +66,7 @@ const HistoryPage: React.FC = () => {
     const token = Cookies.get("auth_token");
     if (!token) return setLoading(false);
     try {
-      const res = await fetch("http://127.0.0.1:3333/logs", {
+      const res = await fetch(`${API_BASE_URL}/logs`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(res.statusText);

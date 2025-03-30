@@ -3,6 +3,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Cookies from "js-cookie"
 import { useEffect, useState } from "react"
 import { CardContent } from "@/components/ui/card"
+import { API_BASE_URL } from "@/config/api"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -85,7 +86,7 @@ export default function DashboardAction() {
         
           useEffect(() => {
             if (acaoId) {
-              fetch(`http://127.0.0.1:3333/ongs/actions/${acaoId}`, {
+              fetch(`${API_BASE_URL}/ongs/actions/${acaoId}`, {
                 headers: {
                   "Authorization": `Bearer ${token}`
                 }
@@ -145,7 +146,7 @@ export default function DashboardAction() {
         
           const fetchActionDetails = async (actionId: number | string) => {
             try {
-              const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}`, {
+              const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`, {
                 headers: {
                   "Authorization": `Bearer ${token}`
                 }
@@ -190,7 +191,7 @@ export default function DashboardAction() {
             formData.append("file", imageFile);
           
             try {
-              const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${slideId}/image`, {
+              const response = await fetch(`${API_BASE_URL}/ongs/actions/${slideId}/image`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
@@ -252,7 +253,7 @@ export default function DashboardAction() {
         
           const updateCategoryExpenses = async (actionId: number | string, categorysExpenses: Record<string, number>) => {
             try {
-              const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/grafic`, {
+              const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}/grafic`, {
                 method: "PUT",
                 headers: {
                   "Content-Type": "application/json",
@@ -288,7 +289,7 @@ export default function DashboardAction() {
         
             try {
               // Basic action update
-              const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${editingAction.id}`, {
+              const response = await fetch(`${API_BASE_URL}/ongs/actions/${editingAction.id}`, {
                 method: "PUT",
                 headers: {
                   "Authorization": `Bearer ${token}`,
@@ -319,7 +320,7 @@ export default function DashboardAction() {
               }
         
               // Refresh action data
-              const getResponse = await fetch(`http://127.0.0.1:3333/ongs/actions/${editingAction.id}`, {
+              const getResponse = await fetch(`${API_BASE_URL}/ongs/actions/${editingAction.id}`, {
                 headers: {
                   "Authorization": `Bearer ${token}`
                 }
@@ -355,7 +356,7 @@ export default function DashboardAction() {
             if (!action?.id) return;
             
             try {
-              const res = await fetch(`http://127.0.0.1:3333/ongs/actions/${action.id}`, {
+              const res = await fetch(`${API_BASE_URL}/ongs/actions/${action.id}`, {
                 method: "DELETE",
                 headers: {
                   Authorization: `Bearer ${token}`,

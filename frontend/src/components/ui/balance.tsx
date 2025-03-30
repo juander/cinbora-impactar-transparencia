@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import { API_BASE_URL } from "@/config/api"
 import {
   LineChart,
   Line,
@@ -78,7 +79,7 @@ export default function Balance() {
     const ngoId = Cookies.get("ngo_id");
     if (!ngoId) return;
   
-    fetch(`http://127.0.0.1:3333/ongs/${ngoId}`)
+    fetch(`${API_BASE_URL}/ongs/${ngoId}`)
       .then((res) => res.json())
       .then((response: NgoData) => {
 

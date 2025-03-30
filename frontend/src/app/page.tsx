@@ -5,6 +5,7 @@ import Image from "next/image";
 import fotoInicial from "../assets/starter.svg";
 import boraImpactar from "../assets/bora_impactar.svg";
 import instagramIcon from "../assets/insta_icon.svg";
+import { API_BASE_URL } from "@/config/api"
 import dateIcon from "../assets/date_icon.svg";
 import phoneIcon from "../assets/phone_icon.svg";
 import shareButton from "../assets/share.svg";
@@ -33,7 +34,7 @@ export default function Ongs() {
   const closeModal = () => setSelectedOng(null);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:3333/ongs")
+    fetch(`${API_BASE_URL}/ongs`)
       .then((res) => res.json())
       .then((data) => {
         const responseData = (Array.isArray(data) ? data : data.ongs || data.data || []) as Ong[];

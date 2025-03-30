@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { UploadCloud, Camera, Video, Trash2, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { API_BASE_URL } from "@/config/api"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +54,7 @@ export default function Gallery() {
     console.log("Buscando imagens e vídeos...");
 
     // Busca as imagens
-    fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/images`, {
+    fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/images`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
       .then((res) => {
@@ -77,7 +78,7 @@ export default function Gallery() {
       });
 
     // Busca os vídeos
-    fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/videos`, {
+    fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/videos`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
       .then((res) => {
@@ -146,7 +147,7 @@ export default function Gallery() {
     formData.append("category", uploadType);
 
     try {
-      const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/files/upload`, {
+      const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}/files/upload`, {
         method: "POST",
         headers: { Authorization: `Bearer ${authToken}` },
         body: formData,
@@ -204,7 +205,7 @@ export default function Gallery() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:3333/ongs/actions/${actionId}/files/${fileId}`,
+        `${API_BASE_URL}/ongs/actions/${actionId}/files/${fileId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${authToken}` },

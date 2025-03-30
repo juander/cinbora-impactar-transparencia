@@ -1,4 +1,5 @@
 "use client";
+import { API_BASE_URL } from "@/config/api"
 import { useState, useEffect, Suspense } from "react";
 import { SearchParamsWrapper } from "@/components/ui/search-params-wrapper";
 import {
@@ -46,7 +47,7 @@ export default function VisitorPage() {
           useEffect(() => {
             if (!ngoId) return;
 
-            fetch(`http://127.0.0.1:3333/logs/last/${ngoId}`)
+            fetch(`${API_BASE_URL}/logs/last/${ngoId}`)
               .then((res) => res.json())
               .then((data) => {
                 const timestamp = data?.timestamp;
@@ -63,7 +64,7 @@ export default function VisitorPage() {
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`http://127.0.0.1:3333/ongs/${ngoId}/actions`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}/actions`)
                 .then((res) => res.json())
                 .then((data) => {
                   setSlides(data);
@@ -78,7 +79,7 @@ export default function VisitorPage() {
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`http://127.0.0.1:3333/ongs/${ngoId}`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}`)
                 .then((res) => res.json())
                 .then((data) => setNgoName(data.ngo.name))
                 .catch((err) => console.error("Erro ao buscar ONG:", err));

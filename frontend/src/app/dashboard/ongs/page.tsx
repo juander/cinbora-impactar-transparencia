@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, Target, Trash2 } from "lucide-react"
+import { API_BASE_URL } from "@/config/api"
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -97,7 +98,7 @@ export default function ActionsPage() {
 
   useEffect(() => {
     if (editingSlide.id) {
-      fetch(`http://127.0.0.1:3333/ongs/actions/${editingSlide.id}`, {
+      fetch(`${API_BASE_URL}/ongs/actions/${editingSlide.id}`, {
         headers: { Authorization: `Bearer ${Cookies.get("auth_token")}` },
       })
         .then((res) => res.json())
@@ -149,7 +150,7 @@ export default function ActionsPage() {
     const ngoId = Cookies.get("ngo_id");
     const token = Cookies.get("auth_token");
   
-    fetch(`http://127.0.0.1:3333/logs/last/${ngoId}`, {
+    fetch(`${API_BASE_URL}/logs/last/${ngoId}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -295,7 +296,7 @@ export default function ActionsPage() {
     const token = Cookies.get("auth_token");
   
     try {
-      const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}/grafic`, {
+      const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}/grafic`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -327,8 +328,8 @@ export default function ActionsPage() {
     }
   
     const url = forceFetch
-      ? `http://127.0.0.1:3333/ongs/${ngoId}/actions?nocache=${Date.now()}`
-      : `http://127.0.0.1:3333/ongs/${ngoId}/actions`;
+      ? `${API_BASE_URL}/ongs/${ngoId}/actions?nocache=${Date.now()}`
+      : `${API_BASE_URL}/ongs/${ngoId}/actions`;
   
     try {
       const response = await fetch(url);
@@ -353,7 +354,7 @@ export default function ActionsPage() {
   
 const fetchActionDetails = async (actionId: string): Promise<void> => {
   try {
-    const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${actionId}`);
+    const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`);
     if (!response.ok) throw new Error("Erro ao buscar detalhes da ação.");
 
     const data = await response.json();
@@ -430,7 +431,7 @@ const updateSlideImage = async (slideId: string): Promise<void> => {
   formData.append("file", imageFile);
 
   try {
-    const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${slideId}/image`, {
+    const response = await fetch(`${API_BASE_URL}/ongs/actions/${slideId}/image`, {
       method: "PUT",
       headers: { 
         Authorization: `Bearer ${token}` 
@@ -486,8 +487,8 @@ const handleSave = async () => {
   const token = Cookies.get("auth_token");
   const method = isUpdate ? "PUT" : "POST";
   const url = isUpdate
-    ? `http://127.0.0.1:3333/ongs/actions/${editingSlide.id}`
-    : `http://127.0.0.1:3333/ongs/actions`;
+    ? `${API_BASE_URL}/ongs/actions/${editingSlide.id}`
+    : `${API_BASE_URL}/ongs/actions`;
 
   let body;
   let headers: Record<string, string> = {
