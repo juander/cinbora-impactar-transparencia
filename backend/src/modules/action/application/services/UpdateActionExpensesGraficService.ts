@@ -10,12 +10,9 @@ class UpdateActionExpensesGraficService {
 
   async execute(actionId: string, newExpense: Record<string, number>): Promise<any> {
     try {
-      return this.actionRepository.updateActionExpensesGrafic(actionId, newExpense);
+      return await this.actionRepository.updateActionExpensesGrafic(actionId, newExpense);
     } catch (error) {
       console.error("Erro ao atualizar gráfico de despesas da ação:", error);
-      if (error instanceof CustomError) {
-        throw error;
-      }
       throw new CustomError("Erro ao atualizar gráfico de despesas da ação", 500);
     }
   }

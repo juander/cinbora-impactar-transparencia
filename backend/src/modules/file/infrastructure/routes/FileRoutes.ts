@@ -152,7 +152,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   // Get ONG file routes with caching
   fastify.get<{ Params: OngParams }>(
     "/ongs/:ngoId/files/images", 
-    { schema: getOngFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getOngImages(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
@@ -169,7 +168,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: OngParams }>(
     "/ongs/:ngoId/files/videos", 
-    { schema: getOngFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getOngVideos(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
@@ -186,7 +184,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: OngParams }>(
     "/ongs/:ngoId/files/reports", 
-    { schema: getOngFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getOngReportFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
@@ -203,7 +200,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: OngParams }>(
     "/ongs/:ngoId/files/tax_invoices", 
-    { schema: getOngFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getOngTaxInvoicesFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
@@ -220,7 +216,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: OngParams }>(
     "/ongs/:ngoId/files/others", 
-    { schema: getOngFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getOngOtherFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
@@ -238,7 +233,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   // Get Action file routes with caching
   fastify.get<{ Params: ActionParams }>(
     "/ongs/actions/:actionId/files/images", 
-    { schema: getActionFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getActionImages(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
@@ -254,8 +248,7 @@ async function fileRoutes(fastify: FastifyInstance) {
   );
   
   fastify.get<{ Params: ActionParams }>(
-    "/ongs/actions/:actionId/files/videos", 
-    { schema: getActionFilesSchema }, 
+    "/ongs/actions/:actionId/files/videos",  
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getActionVideos(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
@@ -272,7 +265,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: ActionParams }>(
     "/ongs/actions/:actionId/files/reports", 
-    { schema: getActionFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getActionReportFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
@@ -289,7 +281,6 @@ async function fileRoutes(fastify: FastifyInstance) {
   
   fastify.get<{ Params: ActionParams }>(
     "/ongs/actions/:actionId/files/tax_invoices", 
-    { schema: getActionFilesSchema }, 
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getActionTaxInvoicesFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
@@ -305,8 +296,7 @@ async function fileRoutes(fastify: FastifyInstance) {
   );
   
   fastify.get<{ Params: ActionParams }>(
-    "/ongs/actions/:actionId/files/others", 
-    { schema: getActionFilesSchema }, 
+    "/ongs/actions/:actionId/files/others",  
     cachedRoute(
       fastify, 
       ((request, reply) => fileController.getActionOtherFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,

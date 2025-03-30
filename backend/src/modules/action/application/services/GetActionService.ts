@@ -50,13 +50,9 @@ class GetActionService {
 
   async getExpensesByActionId(actionId: string): Promise<any> {
     try {
-      const expenses = await this.actionRepository.findExpensesByActionId(actionId);
-      return expenses;
+      return await this.actionRepository.findExpensesByActionId(actionId);
     } catch (error) {
       console.error("Erro ao obter despesas por ID da ação:", error);
-      if (error instanceof CustomError) {
-        throw error;
-      }
       throw new CustomError("Erro ao obter despesas por ID da ação", 500);
     }
   }

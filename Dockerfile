@@ -7,19 +7,12 @@ WORKDIR /build
 
 # Copy backend files needed for dependencies
 COPY backend/package*.json backend/tsconfig.json backend/module-alias.js ./
-COPY backend/prisma ./prisma/
 
-# Install dependencies and build tools
-RUN npm ci --prefer-offline && \
-    apk add --no-cache --virtual .build-deps openssl
+# Install dependencies
+RUN npm ci --prefer-offline
 
 # Copy backend source code
 COPY backend/src ./src
-
-# Generate Prisma client and build
-RUN npm run prisma:generate && \
-    npx tsc --skipLibCheck && \
-    npm prune --production
 
 # ----------------------
 # STAGE 2: Frontend build
@@ -62,7 +55,7 @@ WORKDIR /app
 RUN mkdir -p /app/backend /app/frontend
 
 # Install PM2 globally and necessary tools
-RUN npm install -g pm2 mongodb-client && \
+RUN npm install -g pm2 && \
     apk add --no-cache mongodb-tools bash
 
 # Copy backend from builder
@@ -72,8 +65,6 @@ COPY --from=backend-builder /build/node_modules ./node_modules
 COPY --from=backend-builder /build/package.json ./
 COPY --from=backend-builder /build/module-alias.js ./
 COPY --from=backend-builder /build/tsconfig.json ./tsconfig.json
-COPY --from=backend-builder /build/prisma/schema.prisma ./prisma/schema.prisma
-COPY --from=backend-builder /build/node_modules/.prisma ./node_modules/.prisma
 
 # Now install mongodb after the directory exists
 RUN npm install mongodb

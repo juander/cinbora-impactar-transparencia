@@ -17,7 +17,6 @@ async function ongRoutes(fastify: FastifyInstance) {
   // Rota para devolver a ONG e seu gráfico
   fastify.get<{ Params: { id: number } }>(
     "/ongs/:id", 
-    { schema: getNgoAndGraficSchema }, 
     cachedRoute(
       fastify, 
       async (request, reply) => {

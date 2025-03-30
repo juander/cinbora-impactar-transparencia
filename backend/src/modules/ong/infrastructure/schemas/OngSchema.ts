@@ -8,7 +8,7 @@ const SkillSchema = z.object({
 const CauseSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable(),
+  description: z.string().nullable(), // Aceita null ou string
 });
 
 const SustainableDevelopmentGoalSchema = z.object({
@@ -21,8 +21,8 @@ const SustainableDevelopmentGoalSchema = z.object({
 const NgoSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().optional(),
-  is_formalized: z.boolean().optional(),
+  description: z.string().nullable().optional(), // Nullable e opcional
+  is_formalized: z.boolean().nullable().optional(), // Nullable e opcional
   start_year: z.number().nullable().optional(),
   contact_phone: z.string().nullable().optional(),
   instagram_link: z.string().nullable().optional(),
@@ -30,10 +30,10 @@ const NgoSchema = z.object({
   facebook_link: z.string().nullable().optional(),
   pix_qr_code_link: z.string().nullable().optional(),
   site: z.string().nullable().optional(),
-  gallery_images_url: z.array(z.string()).optional(),
-  skills: z.array(SkillSchema).optional(),
-  causes: z.array(CauseSchema).optional(),
-  sustainable_development_goals: z.array(SustainableDevelopmentGoalSchema).optional(),
+  gallery_images_url: z.array(z.string()).optional(), // Aceita array de strings ou undefined
+  skills: z.array(SkillSchema).optional(), // Aceita array de skills ou undefined
+  causes: z.array(CauseSchema).optional(), // Aceita array de causes ou undefined
+  sustainable_development_goals: z.array(SustainableDevelopmentGoalSchema).optional(), // Aceita array de goals ou undefined
 });
 
 const createOngSchema = {
@@ -42,10 +42,10 @@ const createOngSchema = {
     200: NgoSchema,
   },
 };
-  
+
 const deleteOngSchema = {
   params: z.object({
-    id: z.coerce.number(), // Convertendo o id de entrada da req http em number
+    id: z.coerce.number(), // Coerção para número
   }),
   response: {
     200: z.object({
@@ -57,7 +57,7 @@ const deleteOngSchema = {
 const updateOngSchema = {
   body: z.object({
     name: z.string().optional(),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(), // Nullable e opcional
     is_formalized: z.boolean().nullable().optional(),
     start_year: z.number().nullable().optional(),
     contact_phone: z.string().nullable().optional(),
@@ -105,14 +105,14 @@ const getNgoAndGraficSchema = {
   response: {
     200: z.object({
       ngo: NgoSchema,
-      ngoGrafic: ngoGraficSchema
+      ngoGrafic: ngoGraficSchema,
     }),
   },
 };
 
 const NgoResponseSchema = NgoSchema.extend({
-  createdAt: z.union([z.string(), z.date()]), 
-  updatedAt: z.union([z.string(), z.date()]), 
+  createdAt: z.union([z.string(), z.date()]).optional(),
+  updatedAt: z.union([z.string(), z.date()]).optional(),
 });
 
 
@@ -122,4 +122,11 @@ const getNgosSchema = {
   },
 };
 
-export { createOngSchema, deleteOngSchema, updateOngSchema, updateNgoGraficSchema, getNgoAndGraficSchema, getNgosSchema };
+export { 
+  createOngSchema, 
+  deleteOngSchema, 
+  updateOngSchema, 
+  updateNgoGraficSchema, 
+  getNgoAndGraficSchema, 
+  getNgosSchema 
+};

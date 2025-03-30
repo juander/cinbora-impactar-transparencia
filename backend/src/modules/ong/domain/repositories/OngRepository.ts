@@ -1,8 +1,13 @@
-import prismaClient from "@shared/prismaClient";
+import { Ngo as NgoModel } from '../../../../../models/ngo.model';
+import { NgoGraphic as NgoGraphicModel } from '../../../../../models/ngo-graphic.model';
+import { OngFile as OngFileModel } from '../../../../../models/ong-file.model';
+import { Action as ActionModel } from '../../../../../models/action.model';
+import { ActionFile as ActionFileModel } from '../../../../../models/action-file.model';
+import { ActionExpensesGrafic as ActionExpensesGraficModel } from '../../../../../models/action-expenses-grafic.model';
+import { Log as LogModel } from '../../../../../models/log.model';
 import { Ong, OngProps } from "@modules/ong";
 import { CustomError } from "@shared/customError";
 import s3StorageInstance from "@shared/s3Cliente";
-import { Prisma } from "@prisma/client";
 import { UserRepository } from "@modules/user";
 
 class OngRepository {
@@ -13,6 +18,31 @@ class OngRepository {
     this.userRepository = userRepository;
   }
 
+  // Helper method to convert Mongoose document to OngProps
+  private mapToOngProps(ong: any): OngProps {
+    // Extract base document
+    const doc = ong.toObject ? ong.toObject() : ong;
+    
+    // Map _id to id and ensure all required fields are present
+    return {
+      id: doc._id,
+      name: doc.name,
+      description: doc.description,
+      is_formalized: doc.is_formalized,
+      start_year: doc.start_year !== undefined ? doc.start_year : null,
+      contact_phone: doc.contact_phone !== undefined ? doc.contact_phone : null,
+      instagram_link: doc.instagram_link !== undefined ? doc.instagram_link : null,
+      x_link: doc.x_link !== undefined ? doc.x_link : null,
+      facebook_link: doc.facebook_link !== undefined ? doc.facebook_link : null,
+      pix_qr_code_link: doc.pix_qr_code_link !== undefined ? doc.pix_qr_code_link : null,
+      site: doc.site !== undefined ? doc.site : null,
+      gallery_images_url: doc.gallery_images_url || [],
+      skills: doc.skills || {},
+      causes: doc.causes || {},
+      sustainable_development_goals: doc.sustainable_development_goals || {}
+    };
+  }
+
   async findById(id: string): Promise<Ong | null> {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
 
@@ -21,22 +51,27 @@ class OngRepository {
     }
 
     try {
-      const ong = await prismaClient.ngo.findUnique({ where: { id: numericId } });
+      const ong = await NgoModel.findById(numericId);
       if (!ong) return null;
-      return new Ong(ong, ong.id);
+      
+      // Use the helper method to convert to OngProps
+      const ongProps = this.mapToOngProps(ong);
+      
+      return new Ong(ongProps, numericId);
     } catch (error) {
       console.error("Erro ao buscar ONG por ID:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao buscar ONG por ID", 400);
-      }
       throw new CustomError("Erro ao buscar ONG", 500);
     }
   }
 
   async findAll(): Promise<Ong[]> {
     try {
-      const ongs = await prismaClient.ngo.findMany();
-      return ongs.map(ong => new Ong(ong, ong.id));
+      const ongs = await NgoModel.find();
+      return ongs.map(ong => {
+        // Use the helper method to convert to OngProps
+        const ongProps = this.mapToOngProps(ong);
+        return new Ong(ongProps, ong._id);
+      });
     } catch (error) {
       console.error("Erro ao buscar todas as ONGs:", error);
       throw new CustomError("Erro ao buscar todas as ONGs", 500);
@@ -45,42 +80,40 @@ class OngRepository {
 
   async create(data: Ong): Promise<Ong> {
     try {
-      // Criando primeiro a ONG
-      const ong = await prismaClient.ngo.create({
-        data: {
-          id: data.id,
-          name: data.name,
-          description: data.description,
-          is_formalized: data.is_formalized,
-          start_year: data.start_year,
-          contact_phone: data.contact_phone,
-          instagram_link: data.instagram_link,
-          x_link: data.x_link,
-          facebook_link: data.facebook_link,
-          pix_qr_code_link: data.pix_qr_code_link,
-          site: data.site,
-          gallery_images_url: data.gallery_images_url,
-          skills: data.skills,
-          causes: data.causes,
-          sustainable_development_goals: data.sustainable_development_goals,
-        },
+      const newNgo = new NgoModel({
+        _id: data.id,
+        name: data.name,
+        description: data.description,
+        is_formalized: data.is_formalized,
+        start_year: data.start_year,
+        contact_phone: data.contact_phone,
+        instagram_link: data.instagram_link,
+        x_link: data.x_link,
+        facebook_link: data.facebook_link,
+        pix_qr_code_link: data.pix_qr_code_link,
+        site: data.site,
+        gallery_images_url: data.gallery_images_url,
+        skills: data.skills,
+        causes: data.causes,
+        sustainable_development_goals: data.sustainable_development_goals,
       });
+      
+      const savedNgo = await newNgo.save();
 
-      // Depois criando os gráficos associados à ONG
-      await prismaClient.ngoGraphic.create({
-        data: {
-          ngoId: data.id,
-          totalExpenses: 0,
-          expensesByAction: [],
-        },
+      const newNgoGraphic = new NgoGraphicModel({
+        ngoId: data.id,
+        totalExpenses: 0,
+        expensesByAction: [],
       });
+      
+      await newNgoGraphic.save();
 
-      return new Ong(ong, ong.id);
+      // Use the helper method to convert to OngProps
+      const ongProps = this.mapToOngProps(savedNgo);
+      
+      return new Ong(ongProps, savedNgo._id);
     } catch (error) {
       console.error("Erro ao criar ONG:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao criar ONG", 400);
-      }
       throw new CustomError("Erro ao criar ONG", 500);
     }
   }
@@ -94,136 +127,123 @@ class OngRepository {
       }
 
       try {
-        // Isso exclui TUDO no caminho /{ongId}/... incluindo todas as subpastas
         await this.s3Storage.deleteFolder(`${numericId}`);
         console.log(`Todos os arquivos da ONG ${numericId} foram excluídos com sucesso`);
       } catch (s3Error) {
         console.error(`Erro ao excluir arquivos da ONG ${numericId}:`, s3Error);
-        // Continuamos com a deleção dos registros no banco mesmo se falhar no S3
       }
       
-      const ong = await prismaClient.ngo.findUnique({
-        where: { id: numericId },
-        include: {
-          actions: {
-            select: { id: true }
-          }
-        }
-      });
+      const ong = await NgoModel.findById(numericId);
 
       if (!ong) {
         throw new CustomError("ONG não encontrada", 404);
       }
 
-      // 1. Primeiro, deletar ActionExpensesGrafic (que depende de Action)
-      for (const action of ong.actions) {
-        await prismaClient.actionExpensesGrafic.deleteMany({
-          where: { actionId: action.id }
-        });
-      }
+      const actions = await ActionModel.find({ ngoId: numericId });
+      const actionIds = actions.map(action => action._id);
 
-      // 2. Deletar os usuários associados à ONG
-      await prismaClient.user.deleteMany({
-        where: { ngoId: numericId }
+      await ActionExpensesGraficModel.deleteMany({
+        actionId: { $in: actionIds }
       });
 
-      // 3. Deletar o restante em uma ordem que respeite as relações
-      await prismaClient.actionFile.deleteMany({
-        where: { ngoId: numericId }
+      await this.userRepository.deleteAllFromNgo(numericId);
+
+      await ActionFileModel.deleteMany({
+        ngoId: numericId
       });
 
-      await prismaClient.action.deleteMany({
-        where: { ngoId: numericId }
+      await ActionModel.deleteMany({
+        ngoId: numericId
       });
 
-      await prismaClient.ongFile.deleteMany({
-        where: { ngoId: numericId }
+      await OngFileModel.deleteMany({
+        ngoId: numericId
       });
 
-      await prismaClient.ngoGraphic.deleteMany({
-        where: { ngoId: numericId }
+      await NgoGraphicModel.deleteMany({
+        ngoId: numericId
       });
       
-      // Adicionado: Deletar todos os logs associados à ONG
-      await prismaClient.log.deleteMany({
-        where: { ngoId: numericId }
+      await LogModel.deleteMany({
+        ngoId: numericId
       });
 
-      // 4. Finalmente deletar a ONG
-      await prismaClient.ngo.delete({
-        where: { id: numericId }
-      });
+      await NgoModel.findByIdAndDelete(numericId);
     } catch (error) {
       console.error("Erro ao deletar ONG:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao deletar ONG", 400);
-      }
       throw new CustomError("Erro ao deletar ONG", 500);
     }
   }
 
   async update(ngoId: number, data: Partial<OngProps>): Promise<OngProps> {
-    const existingNgo = await prismaClient.ngo.findUnique({ where: { id: ngoId } });
-
-    if (!existingNgo) {
-      throw new CustomError('ONG não encontrada', 404);
-    }
-
     try {
-      const updatedOng = await prismaClient.ngo.update({
-        where: { id: ngoId },
-        data,
-      });
-      return updatedOng;
+      const existingNgo = await NgoModel.findById(ngoId);
+
+      if (!existingNgo) {
+        throw new CustomError('ONG não encontrada', 404);
+      }
+
+      const updatedNgo = await NgoModel.findByIdAndUpdate(
+        ngoId,
+        { $set: data },
+        { new: true }
+      );
+      
+      if (!updatedNgo) {
+        throw new CustomError('Erro ao atualizar ONG', 500);
+      }
+      
+      // Use the helper method to convert to OngProps
+      return this.mapToOngProps(updatedNgo);
     } catch (error) {
       console.error("Erro ao atualizar ONG:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao atualizar ONG", 400);
-      }
       throw new CustomError("Erro ao atualizar ONG", 500);
     }
   }
 
   async updateNgoGrafic(ngoId: number, data: Partial<{ totalExpenses: number; expensesByCategory: Record<string, number> }>): Promise<any> {
-    const existingGrafic = await prismaClient.ngoGraphic.findUnique({ where: { ngoId } });
-
-    if (!existingGrafic) {
-      throw new CustomError('Gráfico não encontrado', 404);
-    }
-
-    const updatedExpensesByCategory = {
-      ...data.expensesByCategory,
-    };
-
     try {
-      const updatedGrafic = await prismaClient.ngoGraphic.update({
-        where: { ngoId },
-        data: {
-          totalExpenses: data.totalExpenses ?? existingGrafic.totalExpenses,
-          expensesByAction: updatedExpensesByCategory,
-        },
-      });
+      const existingGrafic = await NgoGraphicModel.findOne({ ngoId });
 
-      return updatedGrafic;
+      if (!existingGrafic) {
+        throw new CustomError('Gráfico não encontrado', 404);
+      }
+
+      const updatedExpensesByCategory = {
+        ...data.expensesByCategory,
+      };
+
+      const updatedGrafic = await NgoGraphicModel.findOneAndUpdate(
+        { ngoId },
+        { 
+          $set: {
+            totalExpenses: data.totalExpenses ?? existingGrafic.totalExpenses,
+            expensesByAction: updatedExpensesByCategory,
+          } 
+        },
+        { new: true }
+      );
+
+      if (!updatedGrafic) {
+        throw new CustomError('Erro ao atualizar gráfico da ONG', 500);
+      }
+
+      return updatedGrafic.toObject();
     } catch (error) {
       console.error("Erro ao atualizar gráfico da ONG:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao atualizar gráfico da ONG", 400);
-      }
       throw new CustomError("Erro ao atualizar gráfico da ONG", 500);
     }
   }
 
   async findGraficByNgoId(ngoId: string): Promise<any> {
     try {
-      return prismaClient.ngoGraphic.findFirst({
-        where: { ngoId: parseInt(ngoId) },
-      });
+      const numericId = parseInt(ngoId);
+      
+      const graphic = await NgoGraphicModel.findOne({ ngoId: numericId });
+      
+      return graphic ? graphic.toObject() : null;
     } catch (error) {
       console.error("Erro ao obter gráfico da ONG:", error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new CustomError("Erro ao obter gráfico da ONG", 400);
-      }
       throw new CustomError("Erro ao obter gráfico da ONG", 500);
     }
   }

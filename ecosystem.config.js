@@ -3,7 +3,8 @@ module.exports = {
     {
       name: "backend",
       cwd: "/app/backend",
-      script: "./start.sh",
+      script: "node",
+      args: "-r module-alias/register dist/server.js",
       env: {
         NODE_ENV: "production",
         PORT: "3333",  

@@ -1,24 +1,22 @@
-import prismaClient from "@shared/prismaClient";
+import { User as UserModel } from '../../../../../models/user.model';
 import { User, UserProps } from "@modules/user";
 import { CustomError } from "@shared/customError";
 import { DeleteFileService } from "@modules/file";
-import { Prisma } from "@prisma/client";
 import S3Storage from "@shared/s3Storage";
+import mongoose from 'mongoose';
 
 class UserRepository {
   private deleteFileService: DeleteFileService;
   private s3Storage: S3Storage;
 
-  constructor(deleteFileService: DeleteFileService, s3Storage: S3Storage ) {
+  constructor(deleteFileService: DeleteFileService, s3Storage: S3Storage) {
     this.deleteFileService = deleteFileService;
     this.s3Storage = s3Storage;
   }
 
   async findById(id: string): Promise<User | null> {
     try {
-      const user = await prismaClient.user.findUnique({
-        where: { id },
-      });
+      const user = await UserModel.findById(id);
       
       if (!user) return null;
       
@@ -27,7 +25,7 @@ class UserRepository {
         name: user.name,
         email: user.email,
         ngoId: user.ngoId
-      }, user.id);
+      }, id);
       
       // Adicionar explicitamente o profileUrl
       userInstance.profileUrl = user.profileUrl;
@@ -43,7 +41,7 @@ class UserRepository {
 
   async findByEmail(email: string): Promise<User | null> {
     try {
-      const user = await prismaClient.user.findUnique({ where: { email } });
+      const user = await UserModel.findOne({ email });
       if (!user) return null;
       
       // Criar uma instância de User incluindo o profileUrl
@@ -51,14 +49,14 @@ class UserRepository {
         name: user.name,
         email: user.email,
         ngoId: user.ngoId
-      }, user.id);
+      }, user._id.toString());
       
       // Adicionar explicitamente o profileUrl
       userInstance.profileUrl = user.profileUrl;
       
       return userInstance;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error instanceof mongoose.Error) {
         throw new CustomError("Erro ao buscar usuário por email", 400);
       }
       throw error;
@@ -67,22 +65,22 @@ class UserRepository {
 
   async create(data: UserProps): Promise<User> {
     try {
-      const user = await prismaClient.user.create({
-        data: {
-          ...data,
-          profileUrl: "", // Inicializa com string vazia
-        },
+      const newUser = new UserModel({
+        ...data,
+        profileUrl: "", // Inicializa com string vazia
       });
+      
+      const savedUser = await newUser.save();
       
       // Criar uma instância de User incluindo o profileUrl
       const userInstance = new User({
-        name: user.name,
-        email: user.email,
-        ngoId: user.ngoId
-      }, user.id);
+        name: savedUser.name,
+        email: savedUser.email,
+        ngoId: savedUser.ngoId
+      }, savedUser._id.toString());
       
       // Adicionar explicitamente o profileUrl
-      userInstance.profileUrl = user.profileUrl;
+      userInstance.profileUrl = savedUser.profileUrl;
       
       return userInstance;
     } catch (error) {
@@ -115,9 +113,7 @@ class UserRepository {
       }
 
       // Deletar o usuário
-      await prismaClient.user.delete({
-        where: { id },
-      });
+      await UserModel.findByIdAndDelete(id);
     } catch (error) {
       if (error instanceof Error) {
         throw new CustomError(`Erro ao excluir usuário: ${error.message}`, 400);
@@ -128,17 +124,22 @@ class UserRepository {
 
   async updateProfile(id: string, profileUrl: string): Promise<User> {
     try {
-      const updatedUser = await prismaClient.user.update({
-        where: { id },
-        data: { profileUrl },
-      });
+      const updatedUser = await UserModel.findByIdAndUpdate(
+        id, 
+        { profileUrl }, 
+        { new: true } // Return the updated document
+      );
+      
+      if (!updatedUser) {
+        throw new CustomError("Usuário não encontrado", 404);
+      }
       
       // Criar uma instância de User incluindo o profileUrl
       const userInstance = new User({
         name: updatedUser.name,
         email: updatedUser.email,
         ngoId: updatedUser.ngoId
-      }, updatedUser.id);
+      }, updatedUser._id.toString());
       
       // Adicionar explicitamente o profileUrl
       userInstance.profileUrl = updatedUser.profileUrl;
@@ -155,24 +156,22 @@ class UserRepository {
   async deleteAllFromNgo(ngoId: number): Promise<void> {
     try {
       // Buscar todos os usuários da ONG
-      const users = await prismaClient.user.findMany({
-        where: { ngoId },
-      });
+      const users = await UserModel.find({ ngoId });
+      
       // Para cada usuário, excluir sua pasta de arquivos
       for (const user of users) {
         try {
           // Excluir a pasta inteira do usuário usando a nova abordagem
-          await this.s3Storage.deleteFolder(`${ngoId}/users/${user.id}`);
-          console.log(`Pasta do usuário ${user.id} excluída com sucesso`);
+          await this.s3Storage.deleteFolder(`${ngoId}/users/${user._id}`);
+          console.log(`Pasta do usuário ${user._id} excluída com sucesso`);
         } catch (s3Error) {
-          console.error(`Erro ao excluir pasta do usuário ${user.id}:`, s3Error);
+          console.error(`Erro ao excluir pasta do usuário ${user._id}:`, s3Error);
           // Continuar com os próximos usuários
         }
       }
+      
       // Excluir todos os registros de usuários da ONG
-      await prismaClient.user.deleteMany({
-        where: { ngoId },
-      });
+      await UserModel.deleteMany({ ngoId });
     } catch (error) {
       console.error("Erro ao excluir usuários da ONG:", error);
       throw new CustomError("Erro ao excluir usuários da ONG", 400);
@@ -181,21 +180,22 @@ class UserRepository {
 
   async findAll(): Promise<User[]> {
     try {
-      const users = await prismaClient.user.findMany();
+      const users = await UserModel.find();
+      
       return users.map(user => {
         // Criar uma instância de User incluindo o profileUrl
         const userInstance = new User({
           name: user.name,
           email: user.email,
           ngoId: user.ngoId
-        }, user.id);
+        }, user._id.toString());
         
         // Adicionar explicitamente o profileUrl
         userInstance.profileUrl = user.profileUrl;
         
         return userInstance;
       });
-    } catch {
+    } catch (error) {
       throw new CustomError("Erro ao buscar todos os usuários", 500);
     }
   }
@@ -206,7 +206,7 @@ class UserRepository {
       const path = this.s3Storage.buildPath(ngoId, 'users', userId);
       
       // Verificar se já existe uma foto de perfil e excluí-la
-      const user = await prismaClient.user.findUnique({ where: { id: userId } });
+      const user = await UserModel.findById(userId);
       
       if (user && user.profileUrl) {
         try {
@@ -220,10 +220,7 @@ class UserRepository {
       const aws_url = await this.s3Storage.saveFile(fileBuffer, filename, path);
       
       // Atualizar o registro do usuário com a nova URL
-      await prismaClient.user.update({
-        where: { id: userId },
-        data: { profileUrl: aws_url }
-      });
+      await UserModel.findByIdAndUpdate(userId, { profileUrl: aws_url });
       
       return aws_url;
     } catch (error) {
@@ -238,10 +235,7 @@ class UserRepository {
       await this.s3Storage.deleteFolder(`${ngoId}/users/${userId}`);
       
       // Atualizar o registro do usuário para remover a URL
-      await prismaClient.user.update({
-        where: { id: userId },
-        data: { profileUrl: null }
-      });
+      await UserModel.findByIdAndUpdate(userId, { profileUrl: null });
     } catch (error) {
       console.error(`Erro ao excluir foto de perfil do usuário ${userId}:`, error);
       throw new CustomError("Erro ao excluir foto de perfil", 500);

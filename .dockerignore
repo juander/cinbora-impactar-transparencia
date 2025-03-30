@@ -20,3 +20,5 @@ README.md
 **/jest.config.js
 **/.dockerignore
 **/Dockerfile
+
+cyberpress/
