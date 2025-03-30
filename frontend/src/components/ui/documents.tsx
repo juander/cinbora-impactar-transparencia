@@ -6,6 +6,7 @@ import arrowDown from "../../assets/downArrow.svg";
 import download from "../../assets/Documents.svg";
 import { UploadCloud, Trash2 } from "lucide-react";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -116,12 +117,12 @@ export default function Documents() {
     const file = e.target.files && e.target.files[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        alert("O arquivo excede o limite de 10MB");
+        toast.error("O arquivo excede o limite de 10MB");
         return;
       }
       const token = Cookies.get("auth_token");
       if (!token) {
-        alert("Usuário não autenticado");
+        toast.error("Usuário não autenticado");
         return;
       }
       const formData = new FormData();
@@ -135,9 +136,11 @@ export default function Documents() {
         });
         if (!response.ok) throw new Error("Erro no upload do arquivo");
         await response.json();
+        toast.success("Arquivo enviado com sucesso!");
         getFiles();
       } catch (err) {
         console.error(err);
+        toast.error("Falha ao enviar o arquivo. Tente novamente.");
       }
     }
   };
@@ -180,26 +183,24 @@ export default function Documents() {
       {list.map((item, index) => (
         <div
           key={item.id}
-          className="w-full h-14 mr-2 border border-[#294BB6] rounded-[16px] flex items-center justify-between p-4 bg-[#F9FAFB] hover:shadow-md transition"
+          className="w-full h-14 border border-[#294BB6] rounded-[16px] flex items-center px-4 bg-[#F9FAFB] hover:shadow-md transition"
         >
-          <div className="flex items-center gap-3">
-            <Image
-              className="cursor-pointer"
-              onClick={() => handleDownload(item)}
-              src={download}
-              alt="download"
-            />
-            <span
-              onClick={() => handleDownload(item)}
-              title={item.name}
-              className="cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis"
-            >
-              {item.name}
-            </span>
-          </div>
+          <Image
+            className="cursor-pointer flex-shrink-0"
+            onClick={() => handleDownload(item)}
+            src={download}
+            alt="download"
+          />
+          <span
+            onClick={() => handleDownload(item)}
+            title={item.name}
+            className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[calc(100%-60px)] flex-grow"
+          >
+            {item.name}
+          </span>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <button>
+              <button className="ml-2 flex-shrink-0">
                 <Trash2 className="text-red-600 w-6 h-6" />
               </button>
             </AlertDialogTrigger>
@@ -243,7 +244,7 @@ export default function Documents() {
         </div>
         <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFiles(taxInvoices, "tax invoice")}
             </div>
@@ -256,7 +257,7 @@ export default function Documents() {
         </div>
         <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-12 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFiles(reports, "report")}
             </div>
@@ -269,7 +270,7 @@ export default function Documents() {
         </div>
         <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFiles(others, "other")}
             </div>

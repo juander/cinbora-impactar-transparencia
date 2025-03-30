@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { UploadCloud, Camera, Video } from "lucide-react";
+import { Camera, Video } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface MediaItem {
@@ -57,7 +57,7 @@ export default function VisitorGallery() {
 			<div className="flex flex-col w-full">
 				<h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-gray-700">
 					<Camera className="text-blue-600 mr-2" size={28} />
-					Imagens
+					<span>Imagens</span>
 				</h2>
 
 				<div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
@@ -72,13 +72,13 @@ export default function VisitorGallery() {
 							/>
 						))
 					) : (
-						<p>Nenhuma imagem disponível</p>
+							<p className="text-gray-500">Nenhuma imagem disponível</p>
 					))}
 				</div>
 
 				<h2 className="text-xl font-bold mt-12 mb-4 flex items-center gap-2 text-gray-700">
 					<Video className="text-blue-600 mr-2" size={28} />
-					Vídeos
+					<span>Vídeos</span>
 				</h2>
 
 				<div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1 mb-20">
@@ -92,7 +92,7 @@ export default function VisitorGallery() {
 							/>
 						))
 					) : (
-						<p className="mb-8">Nenhum vídeo disponível</p>
+							<p className="text-gray-500 mb-8">Nenhum vídeo disponível</p>
 					))}
 				</div>
 			</div>

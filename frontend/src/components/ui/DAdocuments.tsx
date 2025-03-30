@@ -3,267 +3,275 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import arrowDown from "../../assets/downArrow.svg";
-import arrowUP from "../../assets/upArrow.svg";
 import download from "../../assets/Documents.svg";
 import { UploadCloud, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Cookies from "js-cookie";
 
-// Define interface for file object
 interface FileObject {
-	id: string;
-	name: string;
-	aws_url?: string;
-	// Add other properties if needed
+  id: string;
+  name: string;
+  aws_url?: string;
 }
 
+const AccordionSection = ({
+  isOpen,
+  children,
+}: {
+  isOpen: boolean;
+  children: React.ReactNode;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState("0px");
+
+  const updateHeight = () => {
+    if (ref.current) {
+      setHeight(`${ref.current.scrollHeight}px`);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        setTimeout(updateHeight, 100);
+      });
+    } else {
+      setHeight("0px");
+    }
+  }, [isOpen, children]);
+
+  return (
+    <div
+      style={{ maxHeight: height, marginBottom: isOpen ? "2rem" : "0px" }}
+      className="transition-all duration-500 ease-in-out overflow-hidden"
+    >
+      <div ref={ref}>{children}</div>
+    </div>
+  );
+};
+
 export default function DADocuments() {
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const action_id = searchParams.get("action_id");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const action_id = searchParams.get("action_id");
 
-	if (!action_id) return <div>Loading...</div>;
+  if (!action_id) return <div>Loading...</div>;
 
-	const [others, setOthers] = useState<FileObject[]>([]);
-	const [taxInvoices, setTaxInvoices] = useState<FileObject[]>([]);
-	const [reports, setReports] = useState<FileObject[]>([]);
-	const [isNotasFiscaisOpen, setIsNotasFiscaisOpen] = useState(false);
-	const [isRelatoriosOpen, setIsRelatoriosOpen] = useState(false);
-	const [isOutrosOpen, setIsOutrosOpen] = useState(false);
-	const [uploadCategory, setUploadCategory] = useState("other");
-	const fileInputRef = useRef<HTMLInputElement>(null);
+  const [others, setOthers] = useState<FileObject[]>([]);
+  const [taxInvoices, setTaxInvoices] = useState<FileObject[]>([]);
+  const [reports, setReports] = useState<FileObject[]>([]);
+  const [isNotasFiscaisOpen, setIsNotasFiscaisOpen] = useState(false);
+  const [isRelatoriosOpen, setIsRelatoriosOpen] = useState(false);
+  const [isOutrosOpen, setIsOutrosOpen] = useState(false);
+  const [uploadCategory, setUploadCategory] = useState("other");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const getFiles = () => {
-		if (action_id) {
-			fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/others`)
-				.then(response => { if (!response.ok) throw new Error("Erro ao buscar outros arquivos"); return response.json(); })
-				.then(data => setOthers(data))
-				.catch(err => console.error(err));
-			fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/tax_invoices`)
-				.then(response => { if (!response.ok) throw new Error("Erro ao buscar notas fiscais"); return response.json(); })
-				.then(data => setTaxInvoices(data))
-				.catch(err => console.error(err));
-			fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/reports`)
-				.then(response => { if (!response.ok) throw new Error("Erro ao buscar relatórios"); return response.json(); })
-				.then(data => setReports(data))
-				.catch(err => console.error(err));
-		}
-	};
+  const getFiles = () => {
+    if (action_id) {
+      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/others`)
+        .then(response => { if (!response.ok) throw new Error("Erro ao buscar outros arquivos"); return response.json(); })
+        .then(data => setOthers(data))
+        .catch(err => console.error(err));
+      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/tax_invoices`)
+        .then(response => { if (!response.ok) throw new Error("Erro ao buscar notas fiscais"); return response.json(); })
+        .then(data => setTaxInvoices(data))
+        .catch(err => console.error(err));
+      fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/reports`)
+        .then(response => { if (!response.ok) throw new Error("Erro ao buscar relatórios"); return response.json(); })
+        .then(data => setReports(data))
+        .catch(err => console.error(err));
+    }
+  };
 
-	useEffect(() => { getFiles(); }, [action_id]);
+  useEffect(() => { getFiles(); }, [action_id]);
 
-	const handleUpload = (category: string) => {
-		setUploadCategory(category);
-		fileInputRef.current?.click();
-	};
+  const handleUpload = (category: string) => {
+    setUploadCategory(category);
+    fileInputRef.current?.click();
+  };
 
-	const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files && e.target.files[0];
-		if (file) {
-			if (file.size > 10 * 1024 * 1024) {
-				alert("O arquivo excede o limite de 10MB");
-				return;
-			}
-			const token = Cookies.get("auth_token");
-			if (!token) {
-				alert("Usuário não autenticado");
-				return;
-			}
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("category", uploadCategory);
-			try {
-				const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/upload`, {
-					method: "POST",
-					headers: { "Authorization": `Bearer ${token}` },
-					body: formData,
-				});
-				if (!response.ok) throw new Error("Erro no upload do arquivo");
-				await response.json();
-				getFiles();
-			} catch (err) {
-				console.error(err);
-			}
-		}
-	};
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("O arquivo excede o limite de 10MB");
+        return;
+      }
+      const token = Cookies.get("auth_token");
+      if (!token) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("category", uploadCategory);
+      try {
+        const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/upload`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${token}` },
+          body: formData,
+        });
+        if (!response.ok) throw new Error("Erro no upload do arquivo");
+        await response.json();
+        toast.success("Arquivo enviado com sucesso!");
+        getFiles();
+      } catch (err) {
+        console.error(err);
+        toast.error("Falha ao enviar o arquivo. Tente novamente.");
+      }
+    }
+  };
 
-	const handleDownload = (file: FileObject) => {
-		if (file.aws_url) {
-			window.open(file.aws_url, "_blank");
-		} else {
-			alert("URL do arquivo não disponível");
-		}
-	};
+  const handleDownload = (file: FileObject) => {
+    if (file.aws_url) {
+      window.open(file.aws_url, "_blank");
+    } else {
+      alert("URL do arquivo não disponível");
+    }
+  };
 
-	const handleDeleteFile = async (fileId: string) => {
-		const token = Cookies.get("auth_token");
-		if (!token) {
-		  alert("Usuário não autenticado");
-		  return;
-		}
-		try {
-		  const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/${fileId}`, {
-			method: "DELETE",
-			headers: { Authorization: `Bearer ${token}` },
-		  });
-		  if (!response.ok) throw new Error("Erro ao deletar o documento");
-		  getFiles();
-		} catch (err) {
-		  console.error(err);
-		}
-	  };
+  const handleDeleteFile = async (fileId: string) => {
+    const token = Cookies.get("auth_token");
+    if (!token) {
+      alert("Usuário não autenticado");
+      return;
+    }
+    try {
+      const response = await fetch(`http://127.0.0.1:3333/ongs/actions/${action_id}/files/${fileId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Erro ao deletar o documento");
+      getFiles();
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-	  return (
-		<div className="w-9/12 m-auto mb-20 mt-10 max-[1600px]:w-11/12">
-		  <div className="flex flex-col">
-			<div onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
-			  <p className="ml-12">Notas Fiscais</p>
-			  <Image className="w-4 mr-12" src={isNotasFiscaisOpen ? arrowUP : arrowDown} alt={isNotasFiscaisOpen ? "seta para cima" : "seta para baixo"} />
-			</div>
-			{isNotasFiscaisOpen && (
-			  <>
-				<h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-				<div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-				  <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-					<div onClick={() => handleUpload("tax invoice")} className="w-full h-12 rounded bg-[#E0E0E0] flex items-center justify-center cursor-pointer">
-					  <UploadCloud className="text-[#294BB6] mr-2" size={24}/>
-					  <p>Carregar arquivo</p>
-					</div>
-					{taxInvoices.map((item, index) => (
-					  
-						<div key={index} className="w-full h-12 mr-2 border border-[#294BB6]  rounded flex items-center px-0.5">
-						  <Image className="cursor-pointer" onClick={() => handleDownload(item)} src={download} alt="download" />
-						  <span onClick={() => handleDownload(item)} title={item.name} className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-						
-						<AlertDialog>
-							<AlertDialogTrigger asChild>
-							  <button className="ml-2 ml-auto">
-								<Trash2 className="text-red-600 w-8 h-8"/>
-							  </button>
-							</AlertDialogTrigger>
-							<AlertDialogContent className="rounded-2xl bg-white shadow-lg p-6 w-[380px]">
-							  <AlertDialogHeader>
-								<AlertDialogTitle>Deseja deletar este documento?</AlertDialogTitle>
-								<AlertDialogDescription>Esta operação não poderá ser desfeita.</AlertDialogDescription>
-							  </AlertDialogHeader>
-							  <AlertDialogFooter>
-								<AlertDialogCancel>Cancelar</AlertDialogCancel>
-								<AlertDialogAction onClick={() => handleDeleteFile(item.id)}>
-								  Deletar
-								</AlertDialogAction>
-							  </AlertDialogFooter>
-							</AlertDialogContent>
-						  </AlertDialog>
-						</div>
-					))}
-				  </div>
-				</div>
-			  </>
-			)}
-			<div onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
-			  <p className="ml-12">Relatórios</p>
-			  <Image className="w-4 mr-12" src={isRelatoriosOpen ? arrowUP : arrowDown} alt={isRelatoriosOpen ? "seta para cima" : "seta para baixo"} />
-			</div>
-			{isRelatoriosOpen && (
-			  <>
-				<h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-				<div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-				  <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-					<div onClick={() => handleUpload("report")} className="w-full h-12 rounded bg-[#E0E0E0] flex items-center justify-center cursor-pointer">
-					  <UploadCloud className="text-[#294BB6] mr-2" size={24}/>
-					  <p>Carregar arquivo</p>
-					</div>
-					{reports.map((item, index) => (
-					  <div key={index} className="w-full h-12 mr-2 border border-[#294BB6] rounded flex items-center px-0.5">
-						<Image className="cursor-pointer" onClick={() => handleDownload(item)} src={download} alt="download" />
-						<span onClick={() => handleDownload(item)} title={item.name} className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-					  
-						<AlertDialog>
-						  <AlertDialogTrigger asChild>
-							<button className="ml-2 ml-auto">
-							  <Trash2 className="text-red-600 w-8 h-8"/>
-							</button>
-						  </AlertDialogTrigger>
-						  <AlertDialogContent className="rounded-2xl bg-white shadow-lg p-6 w-[380px]">
-							<AlertDialogHeader>
-							  <AlertDialogTitle>Deseja deletar este documento?</AlertDialogTitle>
-							  <AlertDialogDescription>Esta operação não poderá ser desfeita.</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-							  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-							  <AlertDialogAction onClick={() => handleDeleteFile(item.id)}>
-								Deletar
-							  </AlertDialogAction>
-							</AlertDialogFooter>
-						  </AlertDialogContent>
-						</AlertDialog>
-					  </div>
-					))}
-				  </div>
-				</div>
-			  </>
-			)}
-			<div onClick={() => setIsOutrosOpen(!isOutrosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
-			  <p className="ml-12">Outros documentos</p>
-			  <Image className="w-4 mr-12" src={isOutrosOpen ? arrowUP : arrowDown} alt={isOutrosOpen ? "seta para cima" : "seta para baixo"} />
-			</div>
-			{isOutrosOpen && (
-			  <>
-				<h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-				<div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-				  <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-					<div onClick={() => handleUpload("other")} className="w-full h-12 rounded bg-[#E0E0E0] flex items-center justify-center cursor-pointer">
-					  <UploadCloud className="text-[#294BB6] mr-2" size={24}/>
-					  <p>Carregar arquivo</p>
-					</div>
-					{others.map((item, index) => (
-					  <div key={index} className="w-full h-12 mr-2 border border-[#294BB6] rounded flex items-center px-0.5">
-						<Image className="cursor-pointer" onClick={() => handleDownload(item)} src={download} alt="download" />
-						<span onClick={() => handleDownload(item)} title={item.name} className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-					  
-						<AlertDialog>
-						  <AlertDialogTrigger asChild>
-							<button className="ml-2 ml-auto">
-							  <Trash2 className="text-red-600 w-8 h-8"/>
-							</button>
-						  </AlertDialogTrigger>
-						  <AlertDialogContent className="rounded-2xl bg-white shadow-lg p-6 w-[380px]">
-							<AlertDialogHeader>
-							  <AlertDialogTitle>Deseja deletar este documento?</AlertDialogTitle>
-							  <AlertDialogDescription>Esta operação não poderá ser desfeita.</AlertDialogDescription>
-							</AlertDialogHeader>
-							<AlertDialogFooter>
-							  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-							  <AlertDialogAction onClick={() => handleDeleteFile(item.id)}>
-								Deletar
-							  </AlertDialogAction>
-							</AlertDialogFooter>
-						  </AlertDialogContent>
-						</AlertDialog>
-					  </div>
-					))}
-				  </div>
-				</div>
-			  </>
-			)}
-			<input 
-			  type="file" 
-			  ref={fileInputRef} 
-			  onChange={handleFileChange} 
-			  style={{ display: "none" }}
-			  accept="image/jpeg,image/png,application/pdf" 
-			/>
-		  </div>
-		</div>
-	  );
-	}
+  const renderFiles = (list: FileObject[], category: string) => (
+    <>
+      <div
+        onClick={() => handleUpload(category)}
+        className="w-full h-14 rounded-[16px] bg-[#E0E0E0] flex items-center justify-center cursor-pointer"
+      >
+        <UploadCloud className="text-[#294BB6] mr-2" size={24} />
+        <p>Carregar arquivo</p>
+      </div>
+      {list.map((item, index) => (
+        <div
+          key={item.id}
+          className="w-full h-14 border border-[#294BB6] rounded-[16px] flex items-center px-4 bg-[#F9FAFB] hover:shadow-md transition"
+        >
+          <Image
+            className="cursor-pointer flex-shrink-0"
+            onClick={() => handleDownload(item)}
+            src={download}
+            alt="download"
+          />
+          <span
+            onClick={() => handleDownload(item)}
+            title={item.name}
+            className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[calc(100%-60px)] flex-grow"
+          >
+            {item.name}
+          </span>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="ml-2 flex-shrink-0">
+                <Trash2 className="text-red-600 w-6 h-6" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="rounded-[16px] bg-white shadow-2xl p-8 w-full max-w-md border border-gray-200 text-center">
+              <AlertDialogHeader className="flex flex-col items-center text-center justify-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="text-red-600 w-6 h-6" />
+                </div>
+                <AlertDialogTitle className="text-lg font-bold text-gray-800">
+                  Tem certeza que deseja deletar?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-sm text-gray-500">
+                  Essa ação é irreversível. O documento será permanentemente excluído.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="mt-6 flex justify-center gap-4">
+                <AlertDialogCancel className="px-4 py-2 rounded-[16px] border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 transition">
+                  Cancelar
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteFile(item.id)}
+                  className="px-4 py-2 rounded-[16px] bg-red-600 text-white hover:bg-red-700 transition"
+                >
+                  Deletar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      ))}
+    </>
+  );
+
+  return (
+    <div className="w-9/12 m-auto mb-20 mt-10 max-[1600px]:w-11/12">
+      <div className="flex flex-col">
+        <div onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
+          <p className="ml-12">Notas Fiscais</p>
+          <Image className={`w-4 mr-12 transition-transform duration-300 ${isNotasFiscaisOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
+        </div>
+        <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFiles(taxInvoices, "tax invoice")}
+            </div>
+          </div>
+        </AccordionSection>
+
+        <div onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
+          <p className="ml-12">Relatórios</p>
+          <Image className={`w-4 mr-12 transition-transform duration-300 ${isRelatoriosOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
+        </div>
+        <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFiles(reports, "report")}
+            </div>
+          </div>
+        </AccordionSection>
+
+        <div onClick={() => setIsOutrosOpen(!isOutrosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer">
+          <p className="ml-12">Outros documentos</p>
+          <Image className={`w-4 mr-12 transition-transform duration-300 ${isOutrosOpen ? "rotate-180" : ""}`} src={arrowDown} alt="toggle" />
+        </div>
+        <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFiles(others, "other")}
+            </div>
+          </div>
+        </AccordionSection>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+          accept="image/jpeg,image/png,application/pdf"
+        />
+      </div>
+    </div>
+  );
+}

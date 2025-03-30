@@ -326,7 +326,7 @@ export function UserSidebar({
 
               {ngoName && (
                 <div className="w-full mt-2 text-center">
-                  <p title={ngoName} className="text-sm text-gray-600 font-medium line-clamp-5">{ngoName}</p>
+                  <p title={ngoName} className="text-sm text-gray-600 font-medium line-clamp-2">{ngoName}</p>
                   <Button
                     id="informacaoOngs"
                     variant="outline"

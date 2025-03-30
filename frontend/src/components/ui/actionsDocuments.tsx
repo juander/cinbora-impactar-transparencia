@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import arrowDown from "../../assets/downArrow.svg";
-import arrowUP from "../../assets/upArrow.svg";
 import download from "../../assets/Documents.svg";
 
 // Add proper type for file data
@@ -13,6 +12,42 @@ interface FileData {
   aws_url?: string;
   [key: string]: any;
 }
+
+const AccordionSection = ({
+  isOpen,
+  children,
+}: {
+  isOpen: boolean;
+  children: React.ReactNode;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState("0px");
+
+  const updateHeight = () => {
+    if (ref.current) {
+      setHeight(`${ref.current.scrollHeight}px`);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        setTimeout(updateHeight, 100);
+      });
+    } else {
+      setHeight("0px");
+    }
+  }, [isOpen, children]);
+
+  return (
+    <div
+      style={{ maxHeight: height, marginBottom: isOpen ? "2rem" : "0px" }}
+      className="transition-all duration-500 ease-in-out overflow-hidden"
+    >
+      <div ref={ref}>{children}</div>
+    </div>
+  );
+};
 
 export default function ActionsDocuments() {
   const searchParams = useSearchParams();
@@ -51,79 +86,100 @@ export default function ActionsDocuments() {
     }
   };
 
+  const renderFileList = (list: FileData[]) => (
+    <>
+      {list.length === 0 ? (
+        <p>Nenhum arquivo encontrado</p>
+      ) : (
+        list.map((item) => (
+          <div
+            key={item.id}
+            className="w-full h-14 border border-[#294BB6] rounded-[16px] flex items-center px-4 bg-[#F9FAFB] hover:shadow-md transition"
+          >
+            <Image
+              className="cursor-pointer flex-shrink-0"
+              onClick={() => handleDownload(item)}
+              src={download}
+              alt="download"
+            />
+            <span
+              onClick={() => handleDownload(item)}
+              title={item.name}
+              className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[calc(100%-60px)] flex-grow"
+            >
+              {item.name}
+            </span>
+          </div>
+        ))
+      )}
+    </>
+  );
+
   return (
     <div className="w-9/12 m-auto mb-20 mt-10 max-[1600px]:w-11/12">
       <div className="flex flex-col">
-        <div onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
+        {/* Notas Fiscais */}
+        <div 
+          onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)} 
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Notas Fiscais</p>
-          <Image className="w-4 mr-12" src={isNotasFiscaisOpen ? arrowUP : arrowDown} alt={isNotasFiscaisOpen ? "seta para cima" : "seta para baixo"} />
+          <Image 
+            className={`w-4 mr-12 transition-transform duration-300 ${isNotasFiscaisOpen ? "rotate-180" : ""}`} 
+            src={arrowDown} 
+            alt="toggle" 
+          />
         </div>
-        {isNotasFiscaisOpen && (
-          <>
-            <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-            <div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-              <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-                {taxInvoices.length === 0 ? (
-                  <p>nenhum arquivo encontrado</p>
-                ) : (
-                  taxInvoices.map((item, index) => (
-                    <div key={index} onClick={() => handleDownload(item)} className="w-full h-12 border border-[#294BB6] rounded flex items-center px-0.5 cursor-pointer">
-                      <Image src={download} alt="download" />
-                      <span title={item.name} className="ml-2 whitespace-nowrap overflow-hidden truncate max-w-[180px]">{item.name}</span>
+        <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFileList(taxInvoices)}
+            </div>
+          </div>
+        </AccordionSection>
 
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </>
-        )}
-        <div onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
+        {/* Relatórios */}
+        <div 
+          onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)} 
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Relatórios</p>
-          <Image className="w-4 mr-12" src={isRelatoriosOpen ? arrowUP : arrowDown} alt={isRelatoriosOpen ? "seta para cima" : "seta para baixo"} />
+          <Image 
+            className={`w-4 mr-12 transition-transform duration-300 ${isRelatoriosOpen ? "rotate-180" : ""}`} 
+            src={arrowDown} 
+            alt="toggle" 
+          />
         </div>
-        {isRelatoriosOpen && (
-          <>
-            <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-            <div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-              <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-                {reports.length === 0 ? (
-                  <p>nenhum arquivo encontrado</p>
-                ) : (
-                  reports.map((item, index) => (
-                    <div key={index} onClick={() => handleDownload(item)} className="w-full h-12 border border-[#294BB6] rounded flex items-center px-0.5 cursor-pointer">
-                      <Image src={download} alt="download" />
-                      <span title={item.name} className="ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-                    </div>
-                  ))
-                )}
-              </div>
+        <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFileList(reports)}
             </div>
-          </>
-        )}
-        <div onClick={() => setIsOutrosOpen(!isOutrosOpen)} className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-8 cursor-pointer">
+          </div>
+        </AccordionSection>
+
+        {/* Outros documentos */}
+        <div 
+          onClick={() => setIsOutrosOpen(!isOutrosOpen)} 
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Outros documentos</p>
-          <Image className="w-4 mr-12" src={isOutrosOpen ? arrowUP : arrowDown} alt={isOutrosOpen ? "seta para cima" : "seta para baixo"} />
+          <Image 
+            className={`w-4 mr-12 transition-transform duration-300 ${isOutrosOpen ? "rotate-180" : ""}`} 
+            src={arrowDown} 
+            alt="toggle" 
+          />
         </div>
-        {isOutrosOpen && (
-          <>
-            <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-            <div className="h-full w-full border border-black rounded-[64px] p-16 mb-20 max-[1600px]:border-none max-[1600px]:p-0">
-              <div className="grid grid-cols-3 gap-10 max-lg:grid-cols-2 max-sm:grid-cols-1">
-                {others.length === 0 ? (
-                  <p>nenhum arquivo encontrado</p>
-                ) : (
-                  others.map((item, index) => (
-                    <div key={index} onClick={() => handleDownload(item)} className="w-full h-12 border border-[#294BB6] rounded flex items-center px-0.5 cursor-pointer">
-                      <Image src={download} alt="download" />
-                      <span title={item.name} className="ml-2 whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-                    </div>
-                  ))
-                )}
-              </div>
+        <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
+          <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {renderFileList(others)}
             </div>
-          </>
-        )}
+          </div>
+        </AccordionSection>
       </div>
     </div>
   );

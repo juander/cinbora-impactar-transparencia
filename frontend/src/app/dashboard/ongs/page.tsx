@@ -572,7 +572,7 @@ const handleSave = async () => {
 
   return (
     <main className="relative flex flex-col items-center min-h-screen py-10">
-      <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20">{ngoName}</h1>
+      <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20 max-xl:text-3xl max-sm:text-2xl">{ngoName}</h1>
       {lastUpdated && (
         <div className="absolute top-6 right-10 text-gray-600 text-lg">
           Dados atualizados pela última vez em: <strong>{lastUpdated}</strong>
@@ -683,7 +683,7 @@ const handleSave = async () => {
                           </p>
  
                           {/* Título */}
-                          <h2 title={slide.name} className="text-lg font-semibold mt-3 text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis max-xl:text-3xl max-sm:text-2xl">{slide.name}</h2>
+                          <h2 title={slide.name} className="text-lg font-semibold mt-3 text-gray-900 whitespace-nowrap overflow-hidden text-ellipsis">{slide.name}</h2>
  
                           <div className="relative w-full mt-3">
                             {/* Barra de Progresso */}
@@ -692,20 +692,24 @@ const handleSave = async () => {
                               onMouseEnter={() => setHoveredSlide(slide.id ?? null)}
                               onMouseLeave={() => setHoveredSlide(null)}
                             >
+                            
                               <div
                                 className="h-full bg-[#2BAFF150] transition-all duration-300"
-                                style={{ width: `${Math.min((Number(slide.spent) / Number(slide.goal)) * 100, 100).toFixed(2)}%` }}
+                                style={{ width: `${Math.min((Number(slide.colected) / Number(slide.goal)) * 100, 100).toFixed(2)}%` }}
                               />
                             </div>
+                            <p className="text-sm text-center text-gray-500 mt-2 mb-1 italic">
+                              Representa o progresso da arrecadação
+                            </p>
  
                             {/* Tooltip acima da barra */}
                             {hoveredSlide === slide.id && (
 															<div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 bg-white/90 backdrop-blur-sm text-gray-800 shadow-xl rounded-2xl px-5 py-4 w-[240px] text-sm">
-																{Number(slide.spent) >= Number(slide.goal) ? (
+																{Number(slide.colected) >= Number(slide.goal) ? (
 																	<p className="text-center font-semibold text-green-600">🎉 Meta Atingida!</p>
 																) : (
 																	<p className="text-center font-semibold text-blue-600">
-																		🎯 {(Number(slide.spent) / Number(slide.goal) * 100).toFixed(2)}% dos Gastos da Meta
+																		 🎯 {(Number(slide.colected) / Number(slide.goal) * 100).toFixed(2)}% da Meta Arrecadada
 																	</p>
 																)}
 																<div className="mt-2 space-y-1">

@@ -21,41 +21,32 @@ const AccordionSection = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState("0px");
-  const [shouldRender, setShouldRender] = useState(false);
+
+  const updateHeight = () => {
+    if (ref.current) {
+      setHeight(`${ref.current.scrollHeight}px`);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
-      setShouldRender(true);
       requestAnimationFrame(() => {
-        if (ref.current) {
-          setHeight(`${ref.current.scrollHeight}px`);
-        }
+        setTimeout(updateHeight, 100);
       });
     } else {
-      if (ref.current) {
-        setHeight(`${ref.current.scrollHeight}px`);
-        requestAnimationFrame(() => setHeight("0px"));
-        setTimeout(() => setShouldRender(false), 500); // tempo igual ao da transição
-      }
+      setHeight("0px");
     }
   }, [isOpen, children]);
 
   return (
     <div
-      style={{
-        height: isOpen ? height : "0px",
-        overflow: "hidden",
-        transition: "height 0.5s ease-in-out",
-        marginBottom: isOpen ? "2rem" : "0px",
-      }}
+      style={{ maxHeight: height, marginBottom: isOpen ? "2rem" : "0px" }}
+      className="transition-all duration-500 ease-in-out overflow-hidden"
     >
-      <div ref={ref} style={{ visibility: shouldRender ? "visible" : "hidden" }}>
-        {children}
-      </div>
+      <div ref={ref}>{children}</div>
     </div>
   );
 };
-
 
 export default function VisitorDocuments() {
   const searchParams = useSearchParams();
@@ -109,15 +100,17 @@ export default function VisitorDocuments() {
 
   const renderFileList = (list: FileObject[]) => (
     <>
-      {list.map((item, index) => (
-        <div
-          key={index}
-          onClick={() => handleDownload(item)}
-          className="w-full h-14 mr-2 border border-[#294BB6] rounded-[16px] flex items-center justify-between p-4 bg-[#F9FAFB] hover:shadow-md transition cursor-pointer"
-        >
-          <div className="flex items-center gap-3">
+      {list.length === 0 ? (
+        <p>Nenhum arquivo encontrado</p>
+      ) : (
+        list.map((item, index) => (
+          <div
+            key={index}
+            onClick={() => handleDownload(item)}
+            className="w-full h-14 border border-[#294BB6] rounded-[16px] flex items-center px-4 bg-[#F9FAFB] hover:shadow-md transition cursor-pointer"
+          >
             <Image
-              className="cursor-pointer"
+              className="cursor-pointer flex-shrink-0"
               onClick={() => handleDownload(item)}
               src={download}
               alt="download"
@@ -125,13 +118,13 @@ export default function VisitorDocuments() {
             <span
               onClick={() => handleDownload(item)}
               title={item.name}
-              className="cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis"
+              className="cursor-pointer ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[calc(100%-60px)] flex-grow"
             >
               {item.name}
             </span>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </>
   );
 
@@ -150,9 +143,9 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isNotasFiscaisOpen} key={taxInvoices.length}>
+        <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFileList(taxInvoices)}
             </div>
@@ -171,9 +164,9 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isRelatoriosOpen} key={reports.length}>
+        <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFileList(reports)}
             </div>
@@ -192,9 +185,9 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isOutrosOpen} key={others.length}>
+        <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
           <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-16 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
             <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
               {renderFileList(others)}
             </div>

@@ -34,7 +34,7 @@ export default function ActionDetail() {
             router.push("/")
             return null
           }
-          
+        
           useEffect(() => {
             if (acaoId) {
               fetch(`http://127.0.0.1:3333/ongs/actions/${acaoId}`)
@@ -52,14 +52,13 @@ export default function ActionDetail() {
                 })
             }
           }, [acaoId, router])
-          
+        
           if (!action) return <p className="p-4">Carregando...</p>
-          
-          // Resto do componente fica aqui, usando action, activeTab, etc.
+        
           return (
             <main>
-              <h1 title={action.name} className="text-4xl text-center font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis w-[90%] m-auto">{action.name}</h1>
-              <CardContent className="relative p-4 min-w-72">
+              <h1 title={action.name} className="text-4xl text-center font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis w-[90%] m-auto max-xl:text-3xl max-sm:text-xl">{action.name}</h1>
+              <CardContent className="relative p-0 min-w-84">
                 <div className="relative z-10 bg-white mt-32 w-5/6 m-auto">
                   <div className="flex flex-col justify-between py-6 px-3 w-full border-solid border border-gray-200 rounded-lg shadow-lg ">
                     <div>
@@ -78,11 +77,11 @@ export default function ActionDetail() {
                       >
                         <div
                           className="h-full bg-[#2BAFF150] transition-all duration-300"
-                          style={{ width: `${Math.min((action.spent / action.goal) * 100, 100).toFixed(2)}%` }}
+                          style={{ width: `${Math.min((action.colected / action.goal) * 100, 100).toFixed(2)}%` }}
                         />
                       </div>
                       <p className="text-sm text-center text-gray-500 mt-2 mb-1 italic">
-                        Representa o quanto foi gasto da meta
+                        Representa o progresso da arrecadação
                       </p>
                       {hoveredCard && (
                         <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 bg-white/90 backdrop-blur-sm text-gray-800 shadow-xl rounded-2xl px-5 py-4 w-[240px] text-sm z-50">
@@ -90,7 +89,7 @@ export default function ActionDetail() {
                             <p className="text-center font-semibold text-green-600">🎉 Meta Concluída!</p>
                           ) : (
                             <p className="text-center font-semibold text-blue-600">
-                              🎯 {(action.spent / action.goal * 100).toFixed(2)}% da Meta Atingida
+                              🎯 {(action.colected / action.goal * 100).toFixed(2)}% da Meta Atingida
                             </p>
                           )}
                           <div className="mt-2 space-y-1">

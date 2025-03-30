@@ -92,7 +92,7 @@ export default function VisitorPage() {
 
           return (
             <main className="relative flex flex-col items-center min-h-screen py-10">
-              <h1 className="text-center text-5xl font-bold max-w-[90%] text-[#2E4049] mt-20 whitespace-nowrap max-xl:text-3xl max-sm:text-xl">
+              <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20 max-xl:text-3xl max-sm:text-xl">
                 {ngoName}
               </h1>
 
@@ -164,26 +164,29 @@ export default function VisitorPage() {
                                         className="h-full bg-[#2BAFF150] transition-all duration-300"
                                         style={{
                                           width: `${Math.min(
-                                            (slide.spent / slide.goal) * 100,
+                                            (slide.colected / slide.goal) * 100,
                                             100
                                           ).toFixed(2)}%`,
                                         }}
                                       />
                                     </div>
+                                    <p className="text-sm text-center text-gray-500 mt-2 mb-1 italic">
+                                      Representa o progresso da arrecadação
+                                    </p>
                                     {hoveredSlide === slide.id && (
                                       <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 bg-white/90 backdrop-blur-sm text-gray-800 shadow-xl rounded-2xl px-5 py-4 w-[240px] text-sm">
-                                        {slide.spent >= slide.goal ? (
+                                        {slide.colected >= slide.goal ? (
                                           <p className="text-center font-semibold text-green-600">
-                                            🎉 Meta Concluída!
+                                            🎉 Meta de Arrecadação Alcançada!
                                           </p>
                                         ) : (
                                           <p className="text-center font-semibold text-blue-600">
                                             🎯{" "}
                                             {(
-                                              (slide.spent / slide.goal) *
+                                              (slide.colected / slide.goal) *
                                               100
                                             ).toFixed(2)}
-                                            % da Meta Atingida
+                                            % da Meta Arrecadada
                                           </p>
                                         )}
                                         <div className="mt-2 space-y-1">

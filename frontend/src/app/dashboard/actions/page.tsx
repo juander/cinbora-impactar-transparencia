@@ -380,8 +380,8 @@ export default function DashboardAction() {
             <>
               <main className="p-4">
                 
-                <h1 title={action.name} className="text-4xl text-center font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis">{action.name}</h1>
-                <CardContent className="relative p-4 min-w-72">
+                <h1 title={action.name} className="text-4xl text-center m-auto w-[90%] font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis max-xl:text-3xl max-sm:text-xl">{action.name}</h1>
+                <CardContent className="relative p-0 min-w-84 roudend-xl">
                   <div className="relative z-10 bg-white mt-8 w-5/6 m-auto">
                     <div className="relative">
                       <div className="absolute right-4 top-6 flex space-x-2">
@@ -441,21 +441,21 @@ export default function DashboardAction() {
                           >
                             <div
                               className="h-full bg-[#2BAFF150] transition-all duration-300"
-                              style={{ width: `${Math.min((action.spent / action.goal) * 100, 100).toFixed(2)}%` }}
+                              style={{ width: `${Math.min((action.colected / action.goal) * 100, 100).toFixed(2)}%` }}
                             />
                           </div>
                           <p className="text-sm text-center text-gray-500 mt-2 mb-1 italic">
-                            Representa o quanto foi gasto da meta
+                            Representa o progresso da arrecadação
                           </p>
                           
                           {/* Tooltip acima da barra */}
                           {hoveredCard && (
                             <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-4 bg-white/90 backdrop-blur-sm text-gray-800 shadow-xl rounded-2xl px-5 py-4 w-[240px] text-sm z-50">
-                              {action.spent >= action.goal ? (
-                                <p className="text-center font-semibold text-green-600">🎉 Meta Concluída!</p>
+                              {action.colected >= action.goal ? (
+                                <p className="text-center font-semibold text-green-600">🎉 Meta de Arrecadação Alcançada!</p>
                               ) : (
                                 <p className="text-center font-semibold text-blue-600">
-                                  🎯 {(action.spent / action.goal * 100).toFixed(2)}% da Meta Atingida
+                                  🎯 {(action.colected / action.goal * 100).toFixed(2)}% da Meta Arrecadada
                                 </p>
                               )}
                               <div className="mt-2 space-y-1">
@@ -679,51 +679,86 @@ export default function DashboardAction() {
                                 onChange={(e) => setSelectedCategory(e.target.value || null)}
                               >
                                 <option value="">Selecione uma categoria</option>
-                                {Object.keys(editingAction.categorysExpenses || {}).map((category, index) => (
+                                {Object.keys(editingAction?.categorysExpenses || {}).map((category, index) => (
                                   <option key={index} value={category}>{category}</option>
                                 ))}
                               </select>
                               <FiChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                             </div>
         
-                            {/* Valor da Categoria Selecionada */}
+                            {/* Valor da Categoria Selecionada com botão de remoção */}
                             {selectedCategory && (
-                              <div className="flex-1">
+                              <div className="flex flex-1 items-center">
                                 <input
                                   id="gastoAcao"
                                   type="text"
                                   className="w-full p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
                                   placeholder="Valor"
-                                  value={(editingAction.categorysExpenses?.[selectedCategory] || 0).toString()}
+                                  value={(editingAction?.categorysExpenses?.[selectedCategory] || 0).toString()}
                                   onChange={(e) => {
                                     let rawValue = e.target.value;
                                     rawValue = rawValue.replace(/[^0-9.]/g, "");
                                     const parts = rawValue.split(".");
                                     if (parts.length > 2) return;
                                     if (parts[1]) rawValue = parts[0] + "." + parts[1].slice(0, 2);
-        
                                     setEditingAction({
-                                      ...editingAction,
+                                      ...editingAction!,
                                       categorysExpenses: {
-                                        ...editingAction.categorysExpenses,
-                                        [selectedCategory]: +rawValue
-                                      }
+                                        ...editingAction!.categorysExpenses,
+                                        [selectedCategory]: +rawValue,
+                                      },
                                     });
                                   }}
                                   onBlur={() => {
-                                    const parsed = parseFloat((editingAction.categorysExpenses?.[selectedCategory] || 0).toString());
+                                    const parsed = parseFloat((editingAction?.categorysExpenses?.[selectedCategory] || 0).toString());
                                     if (!isNaN(parsed)) {
                                       setEditingAction({
-                                        ...editingAction,
+                                        ...editingAction!,
                                         categorysExpenses: {
-                                          ...editingAction.categorysExpenses,
-                                          [selectedCategory]: parsed
-                                        }
+                                          ...editingAction!.categorysExpenses,
+                                          [selectedCategory]: parsed,
+                                        },
                                       });
                                     }
                                   }}
                                   inputMode="decimal"
                                 />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button title="Excluir categoria" className="text-red-600 hover:text-red-800 transition-all ml-2">
+                                      <Trash2 className="w-5 h-5" />
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="rounded-2xl shadow-lg p-6 w-[380px] bg-white">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle className="text-lg font-semibold text-gray-900 text-center">
+                                        Deseja excluir essa categoria?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription className="text-gray-600 text-center mt-2">
+                                        Isso removerá a categoria e seu valor associado.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter className="flex gap-4 mt-4">
+                                      <AlertDialogCancel className="bg-gray-200 text-gray-800 rounded-full px-6 py-3 hover:bg-gray-300 transition-all w-full sm:w-auto">
+                                        Cancelar
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        className="bg-red-500 text-white rounded-full px-6 py-3 hover:bg-red-600 transition-all w-full sm:w-auto"
+                                        onClick={() => {
+                                          const updatedCategories = { ...editingAction!.categorysExpenses };
+                                          delete updatedCategories[selectedCategory!];
+                                          setEditingAction({
+                                            ...editingAction!,
+                                            categorysExpenses: updatedCategories,
+                                          });
+                                          setSelectedCategory(null);
+                                        }}
+                                      >
+                                        Excluir
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             )}
                           </div>
@@ -740,13 +775,13 @@ export default function DashboardAction() {
                             <button
                               className="p-3 bg-blue-500 text-white rounded-[16px] hover:bg-blue-600 transition-all"
                               onClick={() => {
-                                if (newCategory.trim() !== "" && !editingAction.categorysExpenses?.[newCategory.trim()]) {
+                                if (newCategory.trim() !== "" && !editingAction?.categorysExpenses?.[newCategory.trim()]) {
                                   setEditingAction({
-                                    ...editingAction,
+                                    ...editingAction!,
                                     categorysExpenses: {
-                                      ...editingAction.categorysExpenses,
+                                      ...editingAction!.categorysExpenses,
                                       [newCategory.trim()]: 0,
-                                    }
+                                    },
                                   });
                                   setNewCategory("");
                                 }
