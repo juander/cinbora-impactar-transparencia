@@ -1,15 +1,13 @@
 services:
-  # MongoDB com replica set
+  # MongoDB Standalone (sem replica set)
   mongodb:
     container_name: cinbora-mongodb
-    build: ./backend/mongodb_rs
+    image: mongo:7.0
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-      MONGO_REPLICA_HOST: cinbora-mongodb
-      MONGO_REPLICA_PORT: 27017
     ports:
       - "27017:27017"
     volumes:
@@ -17,11 +15,11 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: mongosh admin -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD} --eval "rs.status().ok === 1 && db.runCommand('ping').ok === 1" || exit 1
+      test: mongosh admin -u ${MONGO_USERNAME} -p ${MONGO_PASSWORD} --eval "db.adminCommand('ping').ok" || exit 1
       interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 60s
+      start_period: 30s
 
   # Aplicação combinada frontend/backend
   app:

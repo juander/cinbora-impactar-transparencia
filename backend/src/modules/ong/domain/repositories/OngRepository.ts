@@ -45,39 +45,37 @@ class OngRepository {
 
   async create(data: Ong): Promise<Ong> {
     try {
-      const ong = await prismaClient.$transaction(async (prisma) => {
-        const ong = await prismaClient.ngo.create({
-          data: {
-            id: data.id,
-            name: data.name,
-            description: data.description,
-            is_formalized: data.is_formalized,
-            start_year: data.start_year,
-            contact_phone: data.contact_phone,
-            instagram_link: data.instagram_link,
-            x_link: data.x_link,
-            facebook_link: data.facebook_link,
-            pix_qr_code_link: data.pix_qr_code_link,
-            site: data.site,
-            gallery_images_url: data.gallery_images_url,
-            skills: data.skills,
-            causes: data.causes,
-            sustainable_development_goals: data.sustainable_development_goals,
-          },
-        });
-
-        await prisma.ngoGraphic.create({
-          data: {
-            ngoId: data.id,
-            totalExpenses: 0,
-            expensesByAction: [],
-          },
-        });
-
-        return new Ong(ong, ong.id);
+      // Criando primeiro a ONG
+      const ong = await prismaClient.ngo.create({
+        data: {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          is_formalized: data.is_formalized,
+          start_year: data.start_year,
+          contact_phone: data.contact_phone,
+          instagram_link: data.instagram_link,
+          x_link: data.x_link,
+          facebook_link: data.facebook_link,
+          pix_qr_code_link: data.pix_qr_code_link,
+          site: data.site,
+          gallery_images_url: data.gallery_images_url,
+          skills: data.skills,
+          causes: data.causes,
+          sustainable_development_goals: data.sustainable_development_goals,
+        },
       });
 
-      return ong;
+      // Depois criando os gráficos associados à ONG
+      await prismaClient.ngoGraphic.create({
+        data: {
+          ngoId: data.id,
+          totalExpenses: 0,
+          expensesByAction: [],
+        },
+      });
+
+      return new Ong(ong, ong.id);
     } catch (error) {
       console.error("Erro ao criar ONG:", error);
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -95,68 +93,65 @@ class OngRepository {
         throw new CustomError("ID de ONG inválido", 400);
       }
 
-      await prismaClient.$transaction(async (prisma) => {
-
-        try {
-          // Isso exclui TUDO no caminho /{ongId}/... incluindo todas as subpastas
-          await this.s3Storage.deleteFolder(`${numericId}`);
-          console.log(`Todos os arquivos da ONG ${numericId} foram excluídos com sucesso`);
-        } catch (s3Error) {
-          console.error(`Erro ao excluir arquivos da ONG ${numericId}:`, s3Error);
-          // Continuamos com a deleção dos registros no banco mesmo se falhar no S3
-        }
-        
-        const ong = await prisma.ngo.findUnique({
-          where: { id: numericId },
-          include: {
-            actions: {
-              select: { id: true }
-            }
+      try {
+        // Isso exclui TUDO no caminho /{ongId}/... incluindo todas as subpastas
+        await this.s3Storage.deleteFolder(`${numericId}`);
+        console.log(`Todos os arquivos da ONG ${numericId} foram excluídos com sucesso`);
+      } catch (s3Error) {
+        console.error(`Erro ao excluir arquivos da ONG ${numericId}:`, s3Error);
+        // Continuamos com a deleção dos registros no banco mesmo se falhar no S3
+      }
+      
+      const ong = await prismaClient.ngo.findUnique({
+        where: { id: numericId },
+        include: {
+          actions: {
+            select: { id: true }
           }
-        });
-
-        if (!ong) {
-          throw new CustomError("ONG não encontrada", 404);
         }
+      });
 
-        // 1. Primeiro, deletar ActionExpensesGrafic (que depende de Action)
-        for (const action of ong.actions) {
-          await prisma.actionExpensesGrafic.deleteMany({
-            where: { actionId: action.id }
-          });
-        }
+      if (!ong) {
+        throw new CustomError("ONG não encontrada", 404);
+      }
 
-        // 2. Deletar os usuários associados à ONG
-        await prisma.user.deleteMany({
-          where: { ngoId: numericId }
+      // 1. Primeiro, deletar ActionExpensesGrafic (que depende de Action)
+      for (const action of ong.actions) {
+        await prismaClient.actionExpensesGrafic.deleteMany({
+          where: { actionId: action.id }
         });
+      }
 
-        // 3. Deletar o restante em uma ordem que respeite as relações
-        await prisma.actionFile.deleteMany({
-          where: { ngoId: numericId }
-        });
+      // 2. Deletar os usuários associados à ONG
+      await prismaClient.user.deleteMany({
+        where: { ngoId: numericId }
+      });
 
-        await prisma.action.deleteMany({
-          where: { ngoId: numericId }
-        });
+      // 3. Deletar o restante em uma ordem que respeite as relações
+      await prismaClient.actionFile.deleteMany({
+        where: { ngoId: numericId }
+      });
 
-        await prisma.ongFile.deleteMany({
-          where: { ngoId: numericId }
-        });
+      await prismaClient.action.deleteMany({
+        where: { ngoId: numericId }
+      });
 
-        await prisma.ngoGraphic.deleteMany({
-          where: { ngoId: numericId }
-        });
-        
-        // Adicionado: Deletar todos os logs associados à ONG
-        await prisma.log.deleteMany({
-          where: { ngoId: numericId }
-        });
+      await prismaClient.ongFile.deleteMany({
+        where: { ngoId: numericId }
+      });
 
-        // 4. Finalmente deletar a ONG
-        await prisma.ngo.delete({
-          where: { id: numericId }
-        });
+      await prismaClient.ngoGraphic.deleteMany({
+        where: { ngoId: numericId }
+      });
+      
+      // Adicionado: Deletar todos os logs associados à ONG
+      await prismaClient.log.deleteMany({
+        where: { ngoId: numericId }
+      });
+
+      // 4. Finalmente deletar a ONG
+      await prismaClient.ngo.delete({
+        where: { id: numericId }
       });
     } catch (error) {
       console.error("Erro ao deletar ONG:", error);

@@ -20,19 +20,10 @@ async function checkMongo() {
     await client.connect();
     console.log('Conexão estabelecida com MongoDB');
     
-    // Verificar status do replica set
-    const admin = client.db('admin');
-    
-    // Verificar se o replica set está configurado corretamente
-    const rsStatus = await admin.command({ replSetGetStatus: 1 }).catch(e => ({ ok: 0, error: e.message }));
-    if (rsStatus.ok !== 1) {
-      console.error('Replica set não está configurado corretamente:', rsStatus.error || 'Status desconhecido');
-      process.exit(1);
-    }
-    console.log('Replica set está configurado corretamente');
-    
     // Verificar ping
+    const admin = client.db('admin');
     const pingResult = await admin.command({ ping: 1 });
+    
     if (pingResult.ok === 1) {
       console.log('Ping ao MongoDB bem-sucedido!');
       
