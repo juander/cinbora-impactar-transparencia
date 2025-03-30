@@ -4,7 +4,7 @@ module.exports = {
       name: "backend",
       cwd: "/app/backend",
       script: "node",
-      args: "-r module-alias/register dist/server.js",
+      args: "-r module-alias/register dist/src/server.js",
       env: {
         NODE_ENV: "production",
         PORT: "3333",  

@@ -8,15 +8,23 @@ WORKDIR /build
 # Copy backend files needed for dependencies
 COPY backend/package*.json backend/tsconfig.json backend/module-alias.js ./
 
-# Install dependencies
-RUN npm ci --prefer-offline
+# Install dependencies including TypeScript explicitly
+RUN npm ci --prefer-offline && \
+    npm install -g typescript
 
-# Copy backend source code
-COPY backend/src ./src
-COPY backend/models ./models
+# Copy the ENTIRE backend folder to ensure all necessary files are included
+COPY backend/ ./
 
-# Esta linha compila para Typescript
-RUN npm run build
+# List source files to verify they exist before building
+RUN ls -la src/ && \
+    cat src/server.ts
+
+# Build TypeScript with explicit compiler options to guarantee output
+RUN npx tsc --project tsconfig.json
+
+# Debug: Show what was actually built with detailed info
+RUN ls -la dist/ || echo "dist directory is missing or empty" && \
+    find dist -type f | sort
 
 # ----------------------
 # STAGE 2: Frontend build
@@ -32,7 +40,7 @@ COPY frontend/package*.json ./
 RUN npm ci
 
 # Copy frontend source code
-COPY frontend/ .
+COPY frontend/ ./
 
 # Defina a variável de ambiente antes do build
 ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:3015
@@ -72,6 +80,11 @@ COPY --from=backend-builder /build/node_modules ./node_modules
 COPY --from=backend-builder /build/package.json ./
 COPY --from=backend-builder /build/module-alias.js ./
 COPY --from=backend-builder /build/tsconfig.json ./tsconfig.json
+
+# Debug: Verify backend files were copied correctly
+RUN ls -la dist/ && \
+    find dist -type f | sort && \
+    test -f dist/src/server.js || { echo "ERROR: Required file dist/src/server.js is missing!"; exit 1; }
 
 # Now install mongodb after the directory exists
 RUN npm install mongodb

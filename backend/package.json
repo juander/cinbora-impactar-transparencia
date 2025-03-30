@@ -59,10 +59,10 @@
     "zod": "^3.24.2"
   },
   "_moduleAliases": {
-    "@modules": "dist/modules",
-    "@shared": "dist/shared",
-    "@config": "dist/config",
-    "@middlewares": "dist/middlewares",
-    "@routeParams": "dist/routeParams"
+    "@modules": "dist/src/modules",
+    "@shared": "dist/src/shared",
+    "@config": "dist/src/config",
+    "@middlewares": "dist/src/middlewares",
+    "@routeParams": "dist/src/routeParams"
   }
 }
