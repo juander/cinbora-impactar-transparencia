@@ -92,7 +92,6 @@ async function actionRoutes(fastify: FastifyInstance) {
         const actionId = request.params.actionId;
         // Chaves padronizadas - sem prefixo 'cache:'
         await Promise.all([
-          invalidateCache(fastify, `actions:${actionId}:with-expenses`),
           invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`),
           invalidateCache(fastify, `ong:${request.user.ngoId}:with-grafic`)
         ]);
