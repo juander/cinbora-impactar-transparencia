@@ -21,38 +21,6 @@ interface Action {
 }
 
 export default function ActionDetail() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const acaoId = searchParams.get("action_id")
-  const [action, setAction] = useState<Action | null>(null)
-  const [activeTab, setActiveTab] = useState("gallery");
-  const [hoveredCard, setHoveredCard] = useState(false);
-
-  if (!acaoId) {
-    router.push("/")
-    return null
-  }
-
-  useEffect(() => {
-    if (acaoId) {
-      fetch(`${API_BASE_URL}/ongs/actions/${acaoId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.action) {
-            router.push("/")
-            return;
-          }
-          setAction(data.action)
-        })
-        .catch(err => {
-          console.error("Erro ao buscar ação:", err)
-          router.push("/")
-        })
-    }
-  }, [acaoId, router])
-
-  if (!action) return <p className="p-4">Carregando...</p>
-
   return (
     <Suspense fallback={<p className="p-4">Carregando...</p>}>
       <SearchParamsWrapper>
@@ -70,7 +38,7 @@ export default function ActionDetail() {
         
           useEffect(() => {
             if (acaoId) {
-              fetch(`http://127.0.0.1:3333/ongs/actions/${acaoId}`)
+              fetch(`${API_BASE_URL}/ongs/actions/${acaoId}`)
                 .then(res => res.json())
                 .then(data => {
                   if (!data.action) {

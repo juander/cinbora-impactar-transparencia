@@ -13,6 +13,10 @@ RUN npm ci --prefer-offline
 
 # Copy backend source code
 COPY backend/src ./src
+COPY backend/models ./models
+
+# Esta linha compila para Typescript
+RUN npm run build
 
 # ----------------------
 # STAGE 2: Frontend build
@@ -29,6 +33,9 @@ RUN npm ci
 
 # Copy frontend source code
 COPY frontend/ .
+
+# Defina a variável de ambiente antes do build
+ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:3015
 
 # Configure for standalone output
 RUN if [ -f next.config.mjs ]; then \
@@ -71,10 +78,6 @@ RUN npm install mongodb
 
 # Add check-mongo script
 COPY backend/check-mongo.js ./check-mongo.js
-
-# Add start script
-COPY backend/start.sh ./start.sh
-RUN chmod +x ./start.sh
 
 # Copy frontend from builder
 WORKDIR /app/frontend

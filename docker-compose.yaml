@@ -35,7 +35,6 @@ services:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
       FRONTEND_URL: ${FRONTEND_URL}
-      NEXT_PUBLIC_API_URL: http://localhost:3015  # URL para o frontend acessar o backend
     env_file:
       - ${ENV_FILE:-.env}  
     networks:
