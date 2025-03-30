@@ -68,6 +68,7 @@ export default function Balance() {
   const [data, setData] = useState<Array<{[key: string]: any}>>([])
   const [visibleLines, setVisibleLines] = useState<{ [key: string]: boolean }>({})
   const [actionColors, setActionColors] = useState<{ [key: string]: string }>({})
+  const initialYearSet = useState<boolean>(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -135,11 +136,17 @@ export default function Balance() {
 
         setData(Object.values(expensesByMonth))
         setVisibleLines(initialVisibility)
-        setActionColors((prev) => ({ ...prev, ...newColors }))
-        setAvailableYears(Array.from(allYears).sort().reverse())
 
-        if (!selectedYear && allYears.size > 0) {
-          setSelectedYear(Array.from(allYears).sort().reverse()[0])
+        if (Object.keys(newColors).length > 0) {
+          setActionColors((prev) => ({ ...prev, ...newColors }))
+        }
+
+        const sortedYears = Array.from(allYears).sort().reverse()
+        setAvailableYears(sortedYears)
+
+        if (!selectedYear && sortedYears.length > 0 && !initialYearSet[0]) {
+          initialYearSet[1](true)
+          setSelectedYear(sortedYears[0])
         }
       } catch (error) {
         console.error("Error fetching action data:", error)
@@ -147,7 +154,7 @@ export default function Balance() {
     }
 
     fetchData()
-  }, [actionId, selectedYear, actionColors])
+  }, [actionId, selectedYear])
 
   return (
     <div className="flex justify-center py-10">
@@ -210,7 +217,6 @@ export default function Balance() {
               />
               <YAxis
                 label={{
-                  
                   angle: -90,
                   position: "insideLeft",
                   fontSize: 18,

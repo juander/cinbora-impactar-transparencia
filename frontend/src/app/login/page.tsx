@@ -51,7 +51,11 @@ export default function LoginPage() {
           sameSite: "Strict"
         });
       } else {
+        const expirationDate = new Date();
+        expirationDate.setTime(expirationDate.getTime() + (4 * 60 * 60 * 1000));
+        
         Cookies.set("auth_token", data.token, {
+          expires: expirationDate,
           secure: true,
           sameSite: "Strict"
         });

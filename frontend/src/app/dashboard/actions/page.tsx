@@ -424,7 +424,7 @@ export default function DashboardAction() {
                           </AlertDialogContent>
                         </AlertDialog>
                       </div>
-                      <div className="flex flex-col justify-between p-3 py-6 w-full border-solid border border-gray-200 rounded-lg shadow-lg">
+                      <div className="flex flex-col justify-between p-3 py-6 w-full border-solid border border-gray-200 rounded-xl shadow-lg mb-20 duration-300 ease-in hover:shadow-[#2BAFF150]">
                         <div>
                           <p title={action.type} className="inline-block max-w-[45%] text-xs font-semibold text-[#0056D2] bg-[#E9F2FF] px-3 py-1 rounded-lg uppercase whitespace-nowrap overflow-hidden text-ellipsis">
                             {action.type}
