@@ -15,10 +15,7 @@ frontend/.next
 .github
 .vscode
 README.md
-**/.DS_Store
 
 **/jest.config.js
-**/.dockerignore
-**/Dockerfile
 
-cyberpress/
+frontend/cyberpress

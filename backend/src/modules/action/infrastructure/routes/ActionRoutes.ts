@@ -55,8 +55,10 @@ async function actionRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const result = await actionController.create(request);
       if (request.user) {
-        // Chave padronizada - sem 'cache:' prefixo (será adicionado pelo invalidateCache)
-        await invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`);
+        await Promise.all([
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`),
+          invalidateCache(fastify, `ong:${request.user.ngoId}:with-grafic`)
+        ]);
       }
       return reply.status(201).send(result);
     }
@@ -91,7 +93,8 @@ async function actionRoutes(fastify: FastifyInstance) {
         // Chaves padronizadas - sem prefixo 'cache:'
         await Promise.all([
           invalidateCache(fastify, `actions:${actionId}:with-expenses`),
-          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`)
+          invalidateCache(fastify, `ongs:${request.user.ngoId}:actions:list`),
+          invalidateCache(fastify, `ong:${request.user.ngoId}:with-grafic`)
         ]);
       }
       return reply.send(result);

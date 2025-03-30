@@ -1,4 +1,5 @@
 // Este script verifica se o MongoDB está disponível antes de iniciar a aplicação
+require('dotenv').config(); 
 const { MongoClient } = require('mongodb');
 
 async function checkMongo() {

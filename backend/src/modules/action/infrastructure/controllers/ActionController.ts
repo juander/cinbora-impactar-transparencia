@@ -33,6 +33,7 @@ class ActionController {
     this.createFileAwsService = createFileAwsService;
   }
   async getAll(request: FastifyRequest) {
+    console.log("==== GET ALL ACTIONS CONTROLLER DEBUGGING ====");
     const { id: ngoId } = request.params as { id: string };
     try {
       return await this.getActionService.executeByNgoId(ngoId);
@@ -46,6 +47,7 @@ class ActionController {
   }
 
   async getOne(request: FastifyRequest) {
+    console.log("==== GET ONE ACTION CONTROLLER DEBUGGING ====");
     const { id: actionId } = request.params as { id: string, actionId: string };
     try {
       const action = await this.getActionService.executeById(actionId);
@@ -63,6 +65,7 @@ class ActionController {
   }
 
   async getOneWithExpenses(request: FastifyRequest) {
+    console.log("==== GET ONE ACTION WITH EXPENSES CONTROLLER DEBUGGING ====");
     const { actionId } = request.params as { actionId: string };
     try {
       const action = await this.getActionService.executeById(actionId);
@@ -81,6 +84,7 @@ class ActionController {
   }
 
   async updateActionExpensesGrafic(request: FastifyRequest) {
+    console.log("==== UPDATE ACTION EXPENSES GRAFIC CONTROLLER DEBUGGING ====");
     const { actionId } = request.params as { actionId: string };
     const { categorysExpenses } = request.body as {
       categorysExpenses?: Record<string, number>;
@@ -115,6 +119,7 @@ class ActionController {
   }
 
   async getActionExpensesGrafic(request: FastifyRequest) {
+    console.log("==== GET ACTION EXPENSES GRAFIC CONTROLLER DEBUGGING ====");
     const { actionId } = request.params as { id: string, actionId: string };
     try {
       return await this.getActionService.getExpensesByActionId(actionId);
@@ -128,6 +133,7 @@ class ActionController {
   }
 
   async create(request: FastifyRequest) {
+    console.log("==== CREATE ACTION CONTROLLER DEBUGGING ====");
     const parts = request.parts();
     let name = '';
     let type = '';
@@ -147,8 +153,11 @@ class ActionController {
         filename = filePart.filename;
         mimetype = filePart.mimetype;
         size = filePart.file.bytesRead;
+        console.log("Arquivo recebido:", { filename, mimetype, size });
       } else if (part.type === 'field') {
         const fieldPart = part as { fieldname: string, value: string };
+        console.log("Campo recebido:", fieldPart);
+
         if (fieldPart.fieldname === 'name') name = fieldPart.value;
         if (fieldPart.fieldname === 'type') type = fieldPart.value;
         if (fieldPart.fieldname === 'spent') spent = parseFloat(fieldPart.value);
@@ -163,6 +172,16 @@ class ActionController {
         }
       }
     }
+
+    console.log("Dados processados para criação:", {
+      name,
+      type,
+      spent,
+      goal,
+      colected,
+      categorysExpenses,
+      fileBuffer: fileBuffer ? "Arquivo recebido" : "Nenhum arquivo",
+    });
 
     if (!fileBuffer) {
       throw new CustomError("No file uploaded", 400);
@@ -197,6 +216,7 @@ class ActionController {
       const updatedAction = await this.updateActionService.execute(action.id, { aws_url });
 
       await logService.logAction(request.user.ngoId, request.user.id.toString(), request.user.name, "CRIAR", "Ação", action.id.toString(), { name, type, spent, goal, colected, aws_url, categorysExpenses }, `Ação "${action.name}" criada`);
+      console.log("Ação criada com sucesso:", JSON.stringify(updatedAction, null, 2));
       return updatedAction;
     } catch (error) {
       console.error("Error creating action:", error);
@@ -208,6 +228,7 @@ class ActionController {
   }
 
   async update(request: FastifyRequest) {
+    console.log("==== UPDATE ACTION CONTROLLER DEBUGGING ====");
     const { id } = request.params as { id: string };
     const data = request.body as Partial<ActionProps>;
 
@@ -225,6 +246,7 @@ class ActionController {
       const updatedAction = await this.updateActionService.execute(id, data);
       
       await logService.logAction(request.user.ngoId, request.user.id.toString(), request.user.name, "ATUALIZAR", "Ação", id, data, `Ação "${actionToUpdate.name}" atualizada`);
+      console.log("Ação atualizada com sucesso:", JSON.stringify(updatedAction, null, 2));
       return updatedAction;
     } catch (error) {
       console.error("Error updating action:", error);
@@ -236,6 +258,7 @@ class ActionController {
   }
 
   async updateActionImage(request: FastifyRequest) {
+    console.log("==== UPDATE ACTION IMAGE CONTROLLER DEBUGGING ====");
     const { id } = request.params as { id: string };
     const parts = request.parts();
     let fileBuffer: Buffer | null = null;
@@ -246,6 +269,7 @@ class ActionController {
         const filePart = part as CustomMultipartFile;
         fileBuffer = await filePart.toBuffer();
         filename = filePart.filename;
+        console.log("Arquivo recebido para atualização de imagem:", { filename });
       }
     }
 
@@ -290,6 +314,7 @@ class ActionController {
       
       await logService.logAction(request.user.ngoId, request.user.id.toString(), request.user.name, "ATUALIZAR", "Ação", id, { actionName: actionToUpdate.name}, `Imagem de capa da ação "${actionToUpdate.name}" atualizada`);
 
+      console.log("Imagem da ação atualizada com sucesso:", { aws_url: updatedAction.aws_url });
       return { message: "Imagem da ação atualizada com sucesso", aws_url: updatedAction.aws_url };
     } catch (error) {
       console.error("Error updating action image:", error);
@@ -301,6 +326,7 @@ class ActionController {
   }
 
   async delete(request: FastifyRequest) {
+    console.log("==== DELETE ACTION CONTROLLER DEBUGGING ====");
     if (!request.user) {
       throw new CustomError("Usuário não autenticado", 401);
     }
@@ -330,6 +356,7 @@ class ActionController {
         `Ação "${actionToDelete.name}" deletada`
       );
       await this.deleteActionService.execute({ id });
+      console.log("Ação deletada com sucesso:", { id });
       return { message: "Ação deletada com sucesso" };
     } catch (error) {
       console.error("Error deleting action:", error);

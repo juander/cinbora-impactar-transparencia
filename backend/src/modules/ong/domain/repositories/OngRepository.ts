@@ -203,45 +203,96 @@ class OngRepository {
 
   async updateNgoGrafic(ngoId: number, data: Partial<{ totalExpenses: number; expensesByCategory: Record<string, number> }>): Promise<any> {
     try {
-      const existingGrafic = await NgoGraphicModel.findOne({ ngoId });
+        console.log("==== UPDATE NGO GRAPHIC START ====");
+        console.log("NGO ID:", ngoId);
+        console.log("Dados recebidos para atualização:", data);
 
-      if (!existingGrafic) {
-        throw new CustomError('Gráfico não encontrado', 404);
-      }
+        const existingGrafic = await NgoGraphicModel.findOne({ ngoId });
+        console.log("Gráfico da ONG encontrado:", existingGrafic);
 
-      const updatedExpensesByCategory = {
-        ...data.expensesByCategory,
-      };
+        if (!existingGrafic) {
+            throw new CustomError('Gráfico não encontrado', 404);
+        }
 
-      const updatedGrafic = await NgoGraphicModel.findOneAndUpdate(
-        { ngoId },
-        { 
-          $set: {
-            totalExpenses: data.totalExpenses ?? existingGrafic.totalExpenses,
-            expensesByAction: updatedExpensesByCategory,
-          } 
-        },
-        { new: true }
-      );
+        const updatedExpensesByCategory = {
+            ...data.expensesByCategory,
+        };
+        console.log("Despesas atualizadas por categoria:", updatedExpensesByCategory);
 
-      if (!updatedGrafic) {
-        throw new CustomError('Erro ao atualizar gráfico da ONG', 500);
-      }
+        const updatedGrafic = await NgoGraphicModel.findOneAndUpdate(
+            { ngoId },
+            { 
+                $set: {
+                    totalExpenses: data.totalExpenses ?? existingGrafic.totalExpenses,
+                    expensesByAction: updatedExpensesByCategory,
+                } 
+            },
+            { new: true }
+        );
 
-      return updatedGrafic.toObject();
+        if (!updatedGrafic) {
+            throw new CustomError('Erro ao atualizar gráfico da ONG', 500);
+        }
+
+        console.log("Gráfico da ONG atualizado com sucesso:", updatedGrafic);
+        return updatedGrafic.toObject();
     } catch (error) {
-      console.error("Erro ao atualizar gráfico da ONG:", error);
-      throw new CustomError("Erro ao atualizar gráfico da ONG", 500);
+        console.error("Erro ao atualizar gráfico da ONG:", error);
+        throw new CustomError("Erro ao atualizar gráfico da ONG", 500);
+    } finally {
+        console.log("==== UPDATE NGO GRAPHIC END ====");
     }
   }
 
   async findGraficByNgoId(ngoId: string): Promise<any> {
     try {
       const numericId = parseInt(ngoId);
-      
       const graphic = await NgoGraphicModel.findOne({ ngoId: numericId });
       
-      return graphic ? graphic.toObject() : null;
+      if (graphic) {
+        // Convert to plain object and force proper serialization of Map types
+        const result = JSON.parse(JSON.stringify(graphic));
+        
+        // Ensure expensesByAction data is properly processed for each day record
+        if (Array.isArray(result.expensesByAction)) {
+          result.expensesByAction.forEach(yearEntry => {
+            if (yearEntry.months) {
+              yearEntry.months.forEach(monthEntry => {
+                if (monthEntry.dailyRecords) {
+                  monthEntry.dailyRecords.forEach(dailyRecord => {
+                    if (Object.keys(dailyRecord.expensesByAction).length === 0 && 
+                        graphic.toObject) {
+                      const rawObj = graphic.toObject();
+                      try {
+                        const originalYear = rawObj.expensesByAction.find(
+                          y => y.year === yearEntry.year
+                        );
+                        if (originalYear) {
+                          const originalMonth = originalYear.months.find(
+                            m => m.month === monthEntry.month
+                          );
+                          if (originalMonth) {
+                            const originalDay = originalMonth.dailyRecords.find(
+                              d => d.day === dailyRecord.day
+                            );
+                            if (originalDay && originalDay.expensesByAction) {
+                              dailyRecord.expensesByAction = originalDay.expensesByAction;
+                            }
+                          }
+                        }
+                      } catch (err) {
+                        console.error("Error processing nested expense data:", err);
+                      }
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+        return result;
+      }
+      return null;
     } catch (error) {
       console.error("Erro ao obter gráfico da ONG:", error);
       throw new CustomError("Erro ao obter gráfico da ONG", 500);
