@@ -440,185 +440,187 @@ class ActionRepository {
 
   async updateActionExpensesGrafic(actionId: string, newExpense: Record<string, number>): Promise<any> {
     try {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
 
-      const action = await ActionModel.findById(actionId);
-      if (!action) {
-        throw new CustomError("Ação não encontrada", 404);
-      }
-
-      const newTotalSpent = Object.values(newExpense).reduce((sum, value) => sum + value, 0);
-      
-      await ActionModel.findByIdAndUpdate(actionId, { spent: newTotalSpent });
-
-      const existingExpenses = await ActionExpensesGraficModel.findOne({ actionId });
-      let expensesArray = [];
-
-      if (existingExpenses) {
-        expensesArray = existingExpenses.categorysExpenses || [];
-        
-        let yearData = expensesArray.find((entry) => entry.year === year);
-        if (!yearData) {
-          yearData = { year, months: [] };
-          expensesArray.push(yearData);
+        const action = await ActionModel.findById(actionId);
+        if (!action) {
+            throw new CustomError("Ação não encontrada", 404);
         }
 
-        let monthData = yearData.months.find((m) => m.month === month);
-        if (!monthData) {
-          monthData = { month, dailyRecords: [] };
-          yearData.months.push(monthData);
-        }
+        const newTotalSpent = Object.values(newExpense).reduce((sum, value) => sum + value, 0);
+        await ActionModel.findByIdAndUpdate(actionId, { spent: newTotalSpent });
 
-        const dayData = monthData.dailyRecords.find((d) => d.day === day);
-        if (dayData) {
-          dayData.categorysExpenses = newExpense;
+        const existingExpenses = await ActionExpensesGraficModel.findOne({ actionId });
+        let expensesArray = [];
+
+        if (existingExpenses) {
+            expensesArray = existingExpenses.categorysExpenses || [];
+
+            let yearData = expensesArray.find((entry) => entry.year === year);
+            if (!yearData) {
+                yearData = { year, months: [] };
+                expensesArray.push(yearData);
+            }
+
+            let monthData = yearData.months.find((m) => m.month === month);
+            if (!monthData) {
+                monthData = { 
+                    month, 
+                    dailyRecords: [{ day, categorysExpenses: newExpense }] // Adiciona o registro diário diretamente
+                };
+                yearData.months.push(monthData);
+            } else {
+                const dayData = monthData.dailyRecords.find((d) => d.day === day);
+                if (dayData) {
+                    dayData.categorysExpenses = newExpense;
+                } else {
+                    monthData.dailyRecords.push({ day, categorysExpenses: newExpense });
+                }
+            }
+
+            await ActionExpensesGraficModel.updateOne(
+                { actionId },
+                { $set: { categorysExpenses: expensesArray } }
+            );
         } else {
-          monthData.dailyRecords.push({ day, categorysExpenses: newExpense });
+            expensesArray = [
+                { 
+                    year, 
+                    months: [
+                        { 
+                            month, 
+                            dailyRecords: [
+                                { day, categorysExpenses: newExpense }
+                            ]
+                        }
+                    ]
+                }
+            ];
+
+            await ActionExpensesGraficModel.create({
+                actionId,
+                ngoId: action.ngoId,
+                categorysExpenses: expensesArray,
+            });
         }
 
-        await ActionExpensesGraficModel.updateOne(
-          { actionId },
-          { $set: { categorysExpenses: expensesArray } }
-        );
-      } else {
-        expensesArray = [
-          { 
-            year, 
-            months: [
-              { 
-                month, 
-                dailyRecords: [
-                  { day, categorysExpenses: newExpense }
-                ]
-              }
-            ]
-          }
-        ];
-
-        await ActionExpensesGraficModel.create({
-          actionId,
-          ngoId: action.ngoId,
-          categorysExpenses: expensesArray,
+        const allActions = await ActionModel.find({ ngoId: action.ngoId });
+        
+        const allActionsExpenses = {};
+        allActions.forEach(action => {
+            allActionsExpenses[action.name] = action.spent || 0;
         });
-      }
+        
+        const totalExpenses = allActions.reduce((sum, action) => sum + (action.spent || 0), 0);
+        
+        const ngoGraphic = await NgoGraphicModel.findOne({ ngoId: action.ngoId });
+        
+        if (ngoGraphic) {
+            const yearExists = ngoGraphic.expensesByAction.some(entry => entry.year === year);
+            
+            if (!yearExists) {
+                await NgoGraphicModel.updateOne(
+                    { ngoId: action.ngoId },
+                    {
+                        $push: {
+                            expensesByAction: {
+                                year,
+                                months: [{
+                                    month,
+                                    dailyRecords: [{
+                                        day,
+                                        expensesByAction: allActionsExpenses
+                                    }]
+                                }]
+                            }
+                        },
+                        $set: { totalExpenses }
+                    }
+                );
+            } else {
+                const yearIndex = ngoGraphic.expensesByAction.findIndex(entry => entry.year === year);
+                const yearEntry = ngoGraphic.expensesByAction[yearIndex];
+                
+                const monthExists = yearEntry.months.some(m => m.month === month);
+                
+                if (!monthExists) {
+                    await NgoGraphicModel.updateOne(
+                        { ngoId: action.ngoId },
+                        {
+                            $push: {
+                                [`expensesByAction.${yearIndex}.months`]: {
+                                    month,
+                                    dailyRecords: [{
+                                        day,
+                                        expensesByAction: allActionsExpenses
+                                    }]
+                                }
+                            },
+                            $set: { totalExpenses }
+                        }
+                    );
+                } else {
+                    const monthIndex = yearEntry.months.findIndex(m => m.month === month);
+                    const monthEntry = yearEntry.months[monthIndex];
+                    
+                    const dayExists = monthEntry.dailyRecords.some(d => d.day === day);
+                    
+                    if (!dayExists) {
+                        await NgoGraphicModel.updateOne(
+                            { ngoId: action.ngoId },
+                            {
+                                $push: {
+                                    [`expensesByAction.${yearIndex}.months.${monthIndex}.dailyRecords`]: {
+                                        day,
+                                        expensesByAction: allActionsExpenses
+                                    }
+                                },
+                                $set: { totalExpenses }
+                            }
+                        );
+                    } else {
+                        const dayIndex = monthEntry.dailyRecords.findIndex(d => d.day === day);
+                        await NgoGraphicModel.updateOne(
+                            { ngoId: action.ngoId },
+                            {
+                                $set: {
+                                    [`expensesByAction.${yearIndex}.months.${monthIndex}.dailyRecords.${dayIndex}.expensesByAction`]: allActionsExpenses,
+                                    totalExpenses
+                                }
+                            }
+                        );
+                    }
+                }
+            }
+        } else {
+            const ngoGraphicData = {
+                ngoId: action.ngoId,
+                totalExpenses,
+                expensesByAction: [{
+                    year,
+                    months: [{
+                        month,
+                        dailyRecords: [{
+                            day,
+                            expensesByAction: allActionsExpenses
+                        }]
+                    }]
+                }]
+            };
+            
+            await NgoGraphicModel.create(ngoGraphicData);
+        }
 
-      const allActions = await ActionModel.find({ ngoId: action.ngoId });
-      
-      const allActionsExpenses = {};
-      allActions.forEach(action => {
-        allActionsExpenses[action.name] = action.spent || 0;
-      });
-      
-      const totalExpenses = allActions.reduce((sum, action) => sum + (action.spent || 0), 0);
-      
-      const ngoGraphic = await NgoGraphicModel.findOne({ ngoId: action.ngoId });
-      
-      if (ngoGraphic) {
-          const yearExists = ngoGraphic.expensesByAction.some(entry => entry.year === year);
-          
-          if (!yearExists) {
-              await NgoGraphicModel.updateOne(
-                  { ngoId: action.ngoId },
-                  {
-                      $push: {
-                          expensesByAction: {
-                              year,
-                              months: [{
-                                  month,
-                                  dailyRecords: [{
-                                      day,
-                                      expensesByAction: allActionsExpenses
-                                  }]
-                              }]
-                          }
-                      },
-                      $set: { totalExpenses }
-                  }
-              );
-          } else {
-              const yearIndex = ngoGraphic.expensesByAction.findIndex(entry => entry.year === year);
-              const yearEntry = ngoGraphic.expensesByAction[yearIndex];
-              
-              const monthExists = yearEntry.months.some(m => m.month === month);
-              
-              if (!monthExists) {
-                  await NgoGraphicModel.updateOne(
-                      { ngoId: action.ngoId },
-                      {
-                          $push: {
-                              [`expensesByAction.${yearIndex}.months`]: {
-                                  month,
-                                  dailyRecords: [{
-                                      day,
-                                      expensesByAction: allActionsExpenses
-                                  }]
-                              }
-                          },
-                          $set: { totalExpenses }
-                      }
-                  );
-              } else {
-                  const monthIndex = yearEntry.months.findIndex(m => m.month === month);
-                  const monthEntry = yearEntry.months[monthIndex];
-                  
-                  const dayExists = monthEntry.dailyRecords.some(d => d.day === day);
-                  
-                  if (!dayExists) {
-                      await NgoGraphicModel.updateOne(
-                          { ngoId: action.ngoId },
-                          {
-                              $push: {
-                                  [`expensesByAction.${yearIndex}.months.${monthIndex}.dailyRecords`]: {
-                                      day,
-                                      expensesByAction: allActionsExpenses
-                                  }
-                              },
-                              $set: { totalExpenses }
-                          }
-                      );
-                  } else {
-                      const dayIndex = monthEntry.dailyRecords.findIndex(d => d.day === day);
-                      await NgoGraphicModel.updateOne(
-                          { ngoId: action.ngoId },
-                          {
-                              $set: {
-                                  [`expensesByAction.${yearIndex}.months.${monthIndex}.dailyRecords.${dayIndex}.expensesByAction`]: allActionsExpenses,
-                                  totalExpenses
-                              }
-                          }
-                      );
-                  }
-              }
-          }
-      } else {
-          const ngoGraphicData = {
-              ngoId: action.ngoId,
-              totalExpenses,
-              expensesByAction: [{
-                  year,
-                  months: [{
-                      month,
-                      dailyRecords: [{
-                          day,
-                          expensesByAction: allActionsExpenses
-                      }]
-                  }]
-              }]
-          };
-          
-          await NgoGraphicModel.create(ngoGraphicData);
-      }
+        const updatedActionExpenses = await ActionExpensesGraficModel.findOne({ actionId });
+        if (!updatedActionExpenses) throw new CustomError("Erro ao buscar despesas atualizadas", 500);
 
-      const updatedActionExpenses = await ActionExpensesGraficModel.findOne({ actionId });
-      if (!updatedActionExpenses) throw new CustomError("Erro ao buscar despesas atualizadas", 500);
-
-      return updatedActionExpenses;
+        return updatedActionExpenses;
     } catch (error) {
-      console.error("Erro ao atualizar gráfico de despesas da ação:", error);
-      throw new CustomError("Erro ao atualizar gráfico de despesas da ação", 500);
+        console.error("Erro ao atualizar gráfico de despesas da ação:", error);
+        throw new CustomError("Erro ao atualizar gráfico de despesas da ação", 500);
     }
   }
 
