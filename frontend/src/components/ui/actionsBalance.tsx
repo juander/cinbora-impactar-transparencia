@@ -76,7 +76,7 @@ export default function Balance() {
       if (!actionId) return
 
       try {
-        const res = await fetch(`http://localhost:3333/ongs/actions/${actionId}`)
+        const res = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`)
         const data: ActionData = await res.json()
         const grafics = data.actionGrafic?.[0]?.categorysExpenses
 

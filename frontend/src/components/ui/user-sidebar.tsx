@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { API_BASE_URL } from "@/config/api"
+import { API_BASE_URL } from "@/config/api";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -40,7 +40,7 @@ export function UserSidebar({
   const [uploading, setUploading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-
+  const [ongNameState, setOngNameState] = useState<string | null>(null);
 
   const ngoId = Cookies.get("ngo_id");
   const ngoName = Cookies.get("ngo_name");
@@ -53,7 +53,6 @@ export function UserSidebar({
     instagram: "",
     fundacao: "",
   });
-
 
   useEffect(() => {
     if (isOpen) {
@@ -70,9 +69,7 @@ export function UserSidebar({
       }, 500);
     }
   }, [isOpen]);
-  
-  
-  
+
   useEffect(() => {
     if (isVisible) {
       document.body.classList.add("overflow-hidden");
@@ -108,7 +105,6 @@ export function UserSidebar({
         });
     }
   }, [isOpen, authToken]);
-  
 
   useEffect(() => {
     if (showEditProfileModal && authToken) {
@@ -133,7 +129,6 @@ export function UserSidebar({
         });
     }
   }, [showEditProfileModal, authToken]);
-  
 
   useEffect(() => {
     if (showEditOngModal && authToken && ngoId) {
@@ -156,6 +151,12 @@ export function UserSidebar({
     }
   }, [showEditOngModal, authToken, ngoId]);
 
+  useEffect(() => {
+    if (ngoName) {
+      setOngNameState(ngoName);
+    }
+  }, [ngoName]);
+
   const fetchUserData = useCallback(() => {
     if (authToken) {
       fetch(`${API_BASE_URL}/user`, {
@@ -177,7 +178,7 @@ export function UserSidebar({
           setUserName("Erro ao carregar");
           setUserEmail("Erro ao carregar");
         });
-  
+
       if (ngoId) {
         fetch(`${API_BASE_URL}/ongs/${ngoId}/actions`, {
           headers: { Authorization: `Bearer ${authToken}` },
@@ -188,7 +189,6 @@ export function UserSidebar({
       }
     }
   }, [authToken, ngoId]);
-  
 
   useEffect(() => {
     if (isOpen) {
@@ -233,6 +233,24 @@ export function UserSidebar({
         toast.success("Informações atualizadas com sucesso!");
         setShowEditOngModal(false);
         fetchUserData();
+
+        if (ngoId && authToken) {
+          fetch(`${API_BASE_URL}/ongs/${ngoId}`, {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.ngo && data.ngo.name) {
+                setOngNameState(data.ngo.name);
+                Cookies.set("ngo_name", data.ngo.name);
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching updated ONG data:", error);
+            });
+        }
       })
       .catch(() => {
         toast.error("Erro ao atualizar informações da ONG.");
@@ -313,7 +331,6 @@ export function UserSidebar({
               bg-white shadow-xl rounded-l-xl z-50 transition-transform duration-500 ease-out transform
               ${isAnimating ? "translate-x-0" : "translate-x-full"}`}
           >
-
             <div className="flex justify-end p-4">
               <button
                 onClick={() => setIsOpen(false)}
@@ -349,9 +366,14 @@ export function UserSidebar({
               <h2 className="text-lg font-bold mt-2">{userName}</h2>
               <p className="text-sm text-gray-500">{userEmail}</p>
 
-              {ngoName && (
+              {(ongNameState || ngoName) && (
                 <div className="w-full mt-2 text-center">
-                  <p title={ngoName} className="text-sm text-gray-600 font-medium line-clamp-2">{ngoName}</p>
+                  <p
+                    title={ongNameState || ngoName}
+                    className="text-sm text-gray-600 font-medium line-clamp-2"
+                  >
+                    {ongNameState || ngoName}
+                  </p>
                   <Button
                     id="informacaoOngs"
                     variant="outline"
@@ -384,11 +406,12 @@ export function UserSidebar({
                         </Badge>
                       </h4>
                       <div className="mt-4 text-sm font-semibold text-gray-700 w-full">
-                        {/* Layout mobile (triangular) */}
                         <div className="flex flex-col items-center gap-2 md:hidden">
                           <div className="flex justify-center gap-4 w-full">
                             <div className="text-center flex-1">
-                              <p className="text-xs text-gray-500">Arrecadado</p>
+                              <p className="text-xs text-gray-500">
+                                Arrecadado
+                              </p>
                               <p className="text-lg font-bold whitespace-nowrap">
                                 R${" "}
                                 {new Intl.NumberFormat("pt-BR", {
@@ -420,10 +443,11 @@ export function UserSidebar({
                           </div>
                         </div>
 
-                        {/* Layout desktop (linha única) */}
                         <div className="hidden md:flex justify-between w-full text-center">
                           <div className="flex-1">
-                            <p className="text-xs text-gray-500">Arrecadado</p>
+                            <p className="text-xs text-gray-500">
+                              Arrecadado
+                            </p>
                             <p className="text-lg font-bold whitespace-nowrap">
                               R${" "}
                               {new Intl.NumberFormat("pt-BR", {
@@ -460,7 +484,6 @@ export function UserSidebar({
                         indicatorClass="bg-green-500 rounded-full bg-[#2BAFF150]"
                         value={(action.colected / action.goal) * 100}
                       />
-
                     </div>
                   ))
                 ) : (
@@ -530,7 +553,9 @@ export function UserSidebar({
                 Editar ONG
               </h2>
               <p className="text-gray-500 text-sm mb-4 leading-relaxed">
-                Modifique abaixo as informações da sua ONG. Clique em <strong>SALVAR ALTERAÇÕES</strong> e seus dados serão atualizados.
+                Modifique abaixo as informações da sua ONG. Clique em{" "}
+                <strong>SALVAR ALTERAÇÕES</strong> e seus dados serão
+                atualizados.
               </p>
 
               <div className="space-y-4">
@@ -540,7 +565,9 @@ export function UserSidebar({
                     className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="Nome da ONG"
                     value={editFields.nome}
-                    onChange={(e) => setEditFields({ ...editFields, nome: e.target.value })}
+                    onChange={(e) =>
+                      setEditFields({ ...editFields, nome: e.target.value })
+                    }
                   />
                 </div>
 
@@ -551,7 +578,12 @@ export function UserSidebar({
                     className="p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="Descrição da ONG"
                     value={editFields.descricao}
-                    onChange={(e) => setEditFields({ ...editFields, descricao: e.target.value })}
+                    onChange={(e) =>
+                      setEditFields({
+                        ...editFields,
+                        descricao: e.target.value,
+                      })
+                    }
                   />
                 </div>
 
@@ -561,7 +593,12 @@ export function UserSidebar({
                     className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="(xx) xxxxx-xxxx"
                     value={editFields.telefone}
-                    onChange={(e) => setEditFields({ ...editFields, telefone: e.target.value })}
+                    onChange={(e) =>
+                      setEditFields({
+                        ...editFields,
+                        telefone: e.target.value,
+                      })
+                    }
                   />
                 </div>
 
@@ -571,17 +608,29 @@ export function UserSidebar({
                     className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="Link do Instagram"
                     value={editFields.instagram}
-                    onChange={(e) => setEditFields({ ...editFields, instagram: e.target.value })}
+                    onChange={(e) =>
+                      setEditFields({
+                        ...editFields,
+                        instagram: e.target.value,
+                      })
+                    }
                   />
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">Ano de fundação</label>
+                  <label className="text-sm text-gray-600 mb-1">
+                    Ano de fundação
+                  </label>
                   <input
                     type="date"
                     className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     value={editFields.fundacao}
-                    onChange={(e) => setEditFields({ ...editFields, fundacao: e.target.value })}
+                    onChange={(e) =>
+                      setEditFields({
+                        ...editFields,
+                        fundacao: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>

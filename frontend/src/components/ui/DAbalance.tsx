@@ -19,6 +19,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
+import { API_BASE_URL } from "@/config/api"
 
 // Define type interfaces for API response
 interface DailyRecord {
@@ -83,7 +84,7 @@ export default function Balance({ refreshTrigger = 0 }: BalanceProps) {
         setData([]);
         setVisibleLines({});
         
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/ongs/actions/${actionId}`)
+        const res = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`)
         const data: ActionData = await res.json()
         const grafics = data.actionGrafic?.[0]?.categorysExpenses
 
@@ -174,7 +175,7 @@ export default function Balance({ refreshTrigger = 0 }: BalanceProps) {
         if (!actionId) return
 
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/ongs/actions/${actionId}`)
+          const res = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`)
           const data: ActionData = await res.json()
           const grafics = data.actionGrafic?.[0]?.categorysExpenses
 

@@ -273,7 +273,7 @@ export default function ActionsPage() {
     const token = Cookies.get("auth_token");
 
     try{
-        const res = await fetch(`http://localhost:3333/ongs/actions/${actionId}`, {
+        const res = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`, {
           method: "DELETE",
           headers: {
           Authorization: `Bearer ${token}`,
