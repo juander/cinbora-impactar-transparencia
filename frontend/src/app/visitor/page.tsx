@@ -43,11 +43,18 @@ export default function VisitorPage() {
           const [hoveredSlide, setHoveredSlide] = useState<number | null>(null);
           const [lastUpdated, setLastUpdated] = useState<string | null>(null);
           const [ngoName, setNgoName] = useState("");
+          const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+          // Função para atualizar os dados
+          const refreshData = () => {
+            setLoading(true);
+            setRefreshTrigger(prev => prev + 1);
+          };
 
           useEffect(() => {
             if (!ngoId) return;
 
-            fetch(`${API_BASE_URL}/logs/last/${ngoId}`)
+            fetch(`${API_BASE_URL}/logs/last/${ngoId}?_t=${Date.now()}`)
               .then((res) => res.json())
               .then((data) => {
                 const timestamp = data?.timestamp;
@@ -60,11 +67,11 @@ export default function VisitorPage() {
               .catch((err) => {
                 console.error("Erro ao buscar última atualização:", err);
               });
-          }, [ngoId]);
+          }, [ngoId, refreshTrigger]);
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`${API_BASE_URL}/ongs/${ngoId}/actions`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}/actions?_nocache=${Date.now()}`)
                 .then((res) => res.json())
                 .then((data) => {
                   setSlides(data);
@@ -75,16 +82,16 @@ export default function VisitorPage() {
                   setLoading(false);
                 });
             }
-          }, [ngoId]);
+          }, [ngoId, refreshTrigger]);
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`${API_BASE_URL}/ongs/${ngoId}`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}?_t=${Date.now()}`)
                 .then((res) => res.json())
                 .then((data) => setNgoName(data.ngo.name))
                 .catch((err) => console.error("Erro ao buscar ONG:", err));
             }
-          }, [ngoId]);
+          }, [ngoId, refreshTrigger]);
 
           const filteredSlides = slides.filter((slide) =>
             slide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,6 +107,12 @@ export default function VisitorPage() {
               {lastUpdated && (
                 <div className="absolute top-6 right-10 text-gray-600 text-lg">
                   Dados atualizados pela última vez em: <strong>{lastUpdated}</strong>
+                  <button 
+                    onClick={refreshData}
+                    className="ml-3 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                  >
+                    {loading ? "Atualizando..." : "Atualizar dados"}
+                  </button>
                 </div>
               )}
               <h1 className="text-center text-4xl font-bold text-[#2E4049] mt-20">
