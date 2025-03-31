@@ -21,28 +21,23 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-8">
             <h3 className="font-bold text-2xl">Portal</h3>
             <ul className="space-y-4">
-              {["Início", "Parceiros"].map((item, index) => {
-                const link = item === "Parceiros" ? "/partners" : "#";
-                return (
-                  <li
-                    key={index}
-                    className="text-lg transition-transform duration-300 hover:scale-110 hover:text-[#d4dbf0] cursor-pointer"
-                  >
-                    <a href={link} className="hover:underline">{item}</a>
-                  </li>
-                );
-              })}
+              <li
+                className="text-lg transition-transform duration-300 hover:scale-110 hover:text-[#d4dbf0] cursor-pointer"
+              >
+                <a href="#" className="hover:underline">Início</a>
+              </li>
             </ul>
           </div>
+
 
           {/* Coluna 3 - Contato */}
           <div className="flex flex-col items-start gap-8">
             <h3 className="font-bold text-2xl">Contato</h3>
             <p className="text-lg transition-transform duration-300 hover:scale-110">
-              Email: vddc@cin.ufpe.br
+              Email: ouvidoria@recife.pe.gov.br
             </p>
             <p className="text-lg transition-transform duration-300 hover:scale-110">
-              Telefone: (81) 98460-7815
+              Telefone: 0800 281 0040
             </p>
           </div>
         </div>

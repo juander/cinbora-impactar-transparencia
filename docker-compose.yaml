@@ -22,45 +22,44 @@ services:
       start_period: 30s
 
   # Aplicação combinada frontend/backend
-  app:
-    build:
-      context: .
+  frontend:
+    container_name: cinbora-frontend
+    build: 
+      context: ./frontend
       dockerfile: Dockerfile
-    image: cinbora-app:1.0.0
-    container_name: cinbora-app
-    ports:
-      - "3005:3000"  # Frontend 
-      - "3015:3333"  # Backend 
     environment:
-      NODE_ENV: production
-
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3015} 
-      
-      MONGO_HOST: mongodb
-      MONGO_PORT: ${MONGO_PORT:-27017}
-      MONGO_USERNAME: ${MONGO_USERNAME}
-      MONGO_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_DATABASE: ${MONGO_DATABASE}
-      MONGO_AUTH_SOURCE: ${MONGO_AUTH_SOURCE:-admin}
-    env_file:
-      - ${ENV_FILE:-.env}  
+      - NEXT_PUBLIC_API_BASE_URL=/api
     networks:
       - app-network
+      
+  backend:
+    container_name: cinbora-backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=${MONGO_PORT:-27017}
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_DATABASE=${MONGO_DATABASE}
     depends_on:
-      mongodb:
-        condition: service_healthy
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://app:3015 || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - mongodb
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: cinbora-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
 
 networks:
   app-network:
