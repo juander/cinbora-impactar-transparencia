@@ -25,16 +25,10 @@ export const config = {
   secretKey: process.env.SECRET_KEY as string,
   databaseUrl: constructDatabaseUrl(),
   apiLink: process.env.API_LINK,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv: process.env.NODE_ENV,
   frontendUrl: process.env.FRONTEND_URL,
   awsRegion: process.env.AWS_REGION,
   awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
   awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  awsS3BucketName: process.env.AWS_S3_BUCKET_NAME,
-  upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL || '',
-  upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN || '',
-  
-  // Add environment helpers
-  isDevelopment: () => (process.env.NODE_ENV || 'development') === 'development',
-  isProduction: () => process.env.NODE_ENV === 'production'
+  awsS3BucketName: process.env.AWS_S3_BUCKET_NAME
 };

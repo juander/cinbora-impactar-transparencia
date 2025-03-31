@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Target, Trash2 } from "lucide-react"
+import { Search, Target, Trash2, HelpCircle } from "lucide-react"
 import { API_BASE_URL } from "@/config/api"
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -62,6 +62,7 @@ export default function ActionsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [actionToDelete, setActionToDelete] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
   const [editingSlide, setEditingSlide] = useState<EditingSlideType>({
     name: "",
     type: "",
@@ -83,6 +84,8 @@ export default function ActionsPage() {
   const [originalCategorysExpenses, setOriginalCategorysExpenses] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
+  const [categoryNotificationShown, setCategoryNotificationShown] = useState(false);
+
   const router = useRouter();
   
   const generateHash = async (name: string): Promise<string> => {
@@ -132,7 +135,7 @@ export default function ActionsPage() {
   }, []);
   
   useEffect(() => {
-      setActiveTab("balance");
+      setActiveTab("gallery");
   }, []);
 
   useEffect(() => {
@@ -230,6 +233,7 @@ export default function ActionsPage() {
     setIsSaving(false);
     setSelectedCategory(null); 
     setNewCategory("");
+    setCategoryNotificationShown(false); // Reset notification flag when closing modal
     setEditingSlide({
       name: "",
       type: "",
@@ -400,18 +404,9 @@ const fetchActionDetails = async (actionId: string): Promise<void> => {
   
     Object.keys(updatedCategories).forEach((category) => {
       const currentValue = Number(updatedCategories[category]);
-      const originalValue = originalCategorysExpenses[category] || 0;
   
       if (currentValue === 0 || isNaN(currentValue)) {
         updatedCategories[category] = 0;
-      } else if (currentValue < originalValue) {
-        toast.error(
-          `O valor de "${category}" não pode ser menor que ${originalValue.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}.`
-        );
-        updatedCategories[category] = originalValue;
       }
     });
   
@@ -459,6 +454,16 @@ const updateSlideImage = async (slideId: string): Promise<void> => {
     await fetchActions(true);
   } catch (error) {
     console.log("Erro ao atualizar a imagem:", error);
+  }
+};
+
+const showCategoryChangeNotification = () => {
+  if (!categoryNotificationShown) {
+    toast.info("Lembre-se de clicar em Salvar para aplicar as mudanças.", {
+      id: "category-changes",
+      duration: 5000,
+    });
+    setCategoryNotificationShown(true);
   }
 };
   
@@ -537,7 +542,6 @@ const handleSave = async () => {
 
     const updatedSlide = await response.json();
 
-    // Fix: Ensure id is always converted to string
     const slideId = updatedSlide.id ? String(updatedSlide.id) : "";
 
     if (isUpdate && slideId && hasCategoryChanges) {
@@ -551,6 +555,7 @@ const handleSave = async () => {
     }
 
     toast.success("Ação salva com sucesso!");
+    setCategoryNotificationShown(false); // Reset notification flag after saving
 
     setIsSaving(false);
     closeModal();
@@ -564,6 +569,16 @@ const handleSave = async () => {
     if (updatedSlide.aws_url) {
       setImageUrls((prevUrls) => ({ ...prevUrls, [updatedSlide.id]: updatedSlide.aws_url }));
     }
+    
+    if (hasCategoryChanges) {
+      setActiveTab("balance");
+      await fetchActions(true);
+      if (activeTab === "balance") {
+        const event = new CustomEvent('refreshBalance', { detail: { timestamp: Date.now() } });
+        window.dispatchEvent(event);
+      }
+    }
+    
   } catch (error) {
     console.error(error);
     toast.error("Erro ao salvar a ação. Nenhuma alteração foi aplicada.");
@@ -572,7 +587,16 @@ const handleSave = async () => {
 };
 
   return (
+
     <main className="relative flex flex-col items-center min-h-screen py-10">
+      <button
+        onClick={() => setShowGuide(true)}
+        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all"
+        title="Ver guia de instruções"
+      >
+        <HelpCircle className="w-6 h-6" />
+      </button>
+
       <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20 max-xl:text-3xl max-sm:text-2xl">{ngoName}</h1>
       {lastUpdated && (
         <div className="absolute top-6 right-10 text-gray-600 text-lg">
@@ -835,12 +859,13 @@ const handleSave = async () => {
                   Imagem
                 </button>
               </div>
-
+              
               {modalTab === "detalhes" && (
+                <>
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Campo de Título (Ocupa linha inteira) */}
                   <div id="titulo" className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Título</label>
+                    <label className="block text-sm font-medium text-gray-700">Título {!editingSlide?.id && <span className="text-red-500">*</span>}</label>
                     <input
                       id="tituloAcao"
                       type="text"
@@ -855,7 +880,7 @@ const handleSave = async () => {
 
                   {/* Campo de Tipo */}
                   <div id="tipo">
-                    <label className="block text-sm font-medium text-gray-700">Tipo</label>
+                    <label className="block text-sm font-medium text-gray-700">Tipo {!editingSlide?.id && <span className="text-red-500">*</span>}</label>
                     <input
                       id="tipoAcao"
                       type="text"
@@ -870,7 +895,7 @@ const handleSave = async () => {
 
                   {/* Meta (Goal) */}
                   <div id="meta">
-                    <label className="block text-sm font-medium text-gray-700">Meta (R$)</label>
+                    <label className="block text-sm font-medium text-gray-700">Meta (R$) {!editingSlide?.id && <span className="text-red-500">*</span>}</label>
                     <input
                       id="metaAcao"
                       type="text"
@@ -986,6 +1011,7 @@ const handleSave = async () => {
                                     [selectedCategory]: rawValue,
                                   },
                                 }));
+                                showCategoryChangeNotification(); // Show notification once
                               }}
                               onBlur={() => {
                                 const raw = editingSlide.categorysExpenses[selectedCategory!] as string;
@@ -1041,6 +1067,7 @@ const handleSave = async () => {
                                       };
                                     });
                                     setSelectedCategory(null);
+                                    showCategoryChangeNotification(); // Show notification once
                                   }}                                  
                                 >
                                   Excluir
@@ -1081,6 +1108,7 @@ const handleSave = async () => {
                               spent: calculateSpent(updated),
                             });
                             setNewCategory("");
+                            showCategoryChangeNotification(); // Show notification once
                           }
                         }}                        
                       >
@@ -1108,12 +1136,18 @@ const handleSave = async () => {
                     />
                   </div>
                 </div>
+                {!editingSlide?.id && !imagePreview && (
+                  <div className="mt-6 w-full bg-red-100 border border-red-400 text-red-700 text-sm px-4 py-3 rounded-[16px]">
+                    ⚠️ É necessário adicionar uma imagem para criar a ação.
+                  </div>
+                )}
+                </>
               )}
 
               {modalTab === "imagem" && (
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700">
-                    Imagem da Ação
+                    Imagem da Ação {editingSlide?.id ? null : <span className="text-red-500">*</span>}
                   </label>
                   <div className="flex flex-col items-center gap-2 border border-gray-300 p-4 rounded-[16px] mt-2">
                     <label
@@ -1137,6 +1171,12 @@ const handleSave = async () => {
                       />
                     )}
                   </div>
+
+                  {!editingSlide?.id && !imagePreview && (
+                    <div className="mt-3 w-full bg-red-100 border border-red-400 text-red-700 text-sm px-4 py-3 rounded-[16px]">
+                      ⚠️ É necessário adicionar uma imagem para criar a ação.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1166,6 +1206,126 @@ const handleSave = async () => {
           </div>
         </ModalPortal>
       )}
+
+      <ModalPortal>
+        {showGuide && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="relative w-[90%] max-w-4xl bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 overflow-y-auto max-h-[90vh] animate-fade-in">
+
+              <button
+                onClick={() => setShowGuide(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-all text-xl"
+                title="Fechar"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-4xl font-extrabold text-center text-[#294BB6] mb-4">
+                👋 Bem-vindo ao Painel de Ações
+              </h2>
+
+              <p className="text-center text-gray-500 mb-8 text-base max-w-2xl mx-auto">
+                Este é um guia detalhado e interativo para entender cada funcionalidade desta página.
+                Passe o mouse em cada item para ver dicas úteis e exemplos práticos 👇
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700 text-[15px]">
+                <div className="group p-4 rounded-2xl hover:bg-[#F4F7FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <HelpCircle className="text-blue-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Ações</h3>
+                  </div>
+                  <p>Adicione, edite ou compartilhe ações que sua ONG está realizando.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all">
+                    <span className="inline-block bg-blue-100 text-blue-600 text-xs px-3 py-1 rounded-full">
+                      Ex: Campanha "Natal Solidário"
+                    </span>
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#F5FFF6] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <Search className="text-green-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Busca Rápida</h3>
+                  </div>
+                  <p>Filtre ações por nome ou tipo com poucos caracteres.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all">
+                    <input
+                      className="w-full p-2 rounded-lg border border-green-300 text-sm"
+                      value="ex: alimento"
+                      disabled
+                    />
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#F9F5FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <Target className="text-purple-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Progresso</h3>
+                  </div>
+                  <p>Acompanhe o progresso da arrecadação da meta da ação.</p>
+                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden mt-2">
+                    <div className="h-full bg-purple-400 group-hover:bg-purple-600 w-3/4 transition-all"></div>
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#FFF5F7] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <UploadCloud className="text-pink-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Imagem</h3>
+                  </div>
+                  <p>Faça upload de uma imagem que represente a ação.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all">
+                    <span className="inline-block text-xs text-pink-500">Formatos aceitos: JPG, PNG</span>
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#E9F6FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <FiChevronDown className="text-sky-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Categorias</h3>
+                  </div>
+                  <p>Crie e edite categorias de gastos para organização financeira.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all">
+                    <div className="flex gap-2">
+                      <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs">Transporte</span>
+                      <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs">Alimentação</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#FFFCEB] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <FiChevronDown className="text-yellow-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Aba de Navegação</h3>
+                  </div>
+                  <p>Gerencie dados de cada ação pelas abas: Galeria, Balanço e Documentos.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all">
+                    <div className="flex gap-2 text-sm">
+                      <button className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full">Galeria</button>
+                      <button className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full">Balanço</button>
+                      <button className="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full">Documentos</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="bg-gradient-to-r from-[#294BB6] to-[#2BAFF1] text-white font-bold px-8 py-3 rounded-full hover:opacity-90 transition-all shadow-lg"
+                >
+                  Entendi! Vamos lá 🚀
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </ModalPortal>
+
+
+
+
       
         {/* Tabs */}
         <div className="w-full flex justify-center border-b border-gray-300 mt-6">

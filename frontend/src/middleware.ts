@@ -7,6 +7,9 @@ export function middleware(req: NextRequest) {
   if (!token && pathname.startsWith('/dashboard/ongs')) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
+  if (!token && pathname.startsWith('/dashboard/history')) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   if (token && pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard/ongs', req.url));
@@ -16,5 +19,16 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/ongs', '/login'], 
+  matcher: ['/dashboard/ongs', '/dashboard/history', '/login'], 
 };
+
+
+
+
+
+
+
+
+
+
+

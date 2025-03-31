@@ -43,7 +43,7 @@ RUN npm ci
 COPY frontend/ ./
 
 # Defina a variável de ambiente antes do build
-ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:3015
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:3015}
 
 # Configure for standalone output
 RUN if [ -f next.config.mjs ]; then \

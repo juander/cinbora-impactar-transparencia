@@ -38,6 +38,9 @@ export function UserSidebar({
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [newProfileFile, setNewProfileFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
 
   const ngoId = Cookies.get("ngo_id");
   const ngoName = Cookies.get("ngo_name");
@@ -51,15 +54,34 @@ export function UserSidebar({
     fundacao: "",
   });
 
+
   useEffect(() => {
     if (isOpen) {
+      setIsVisible(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsAnimating(true);
+        });
+      });
+    } else {
+      setIsAnimating(false);
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 500);
+    }
+  }, [isOpen]);
+  
+  
+  
+  useEffect(() => {
+    if (isVisible) {
       document.body.classList.add("overflow-hidden");
       document.body.classList.remove("overflow-x-hidden");
     } else {
       document.body.classList.remove("overflow-hidden");
       document.body.classList.add("overflow-x-hidden");
     }
-  }, [isOpen]);
+  }, [isVisible]);
 
   useEffect(() => {
     if (isOpen && authToken) {
@@ -278,18 +300,20 @@ export function UserSidebar({
         </div>
       </button>
 
-      {isOpen && (
+      {isVisible && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-30 z-40"
+            className={`fixed inset-0 z-40 transition-opacity duration-500 ease-out
+              ${isAnimating ? "opacity-30" : "opacity-0 pointer-events-none"}`}
             onClick={() => !showEditOngModal && setIsOpen(false)}
           />
 
           <div
-            className={`fixed right-0 top-0 h-full w-[320px] sm:w-[350px] md:w-[400px] 
-              bg-white shadow-xl rounded-l-xl z-50 transition-transform duration-300 transform 
-              ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+            className={`fixed right-0 top-0 h-full w-[320px] sm:w-[350px] md:w-[400px]
+              bg-white shadow-xl rounded-l-xl z-50 transition-transform duration-500 ease-out transform
+              ${isAnimating ? "translate-x-0" : "translate-x-full"}`}
           >
+
             <div className="flex justify-end p-4">
               <button
                 onClick={() => setIsOpen(false)}
@@ -500,102 +524,78 @@ export function UserSidebar({
 
       {showEditOngModal && (
         <ModalPortal>
-          <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[9999]">
-            <div className="bg-white border border-gray-200 rounded-3xl shadow-xl p-8 w-[500px] h-full overflow-scroll">
-              <h2 className="text-2xl pb-2 font-semibold text-gray-900">
+          <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-[9999] px-4 sm:px-6">
+            <div className="bg-white border border-gray-200 rounded-3xl shadow-xl p-6 sm:p-8 w-full max-w-[500px] max-h-[95vh] overflow-y-auto">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-1">
                 Editar ONG
               </h2>
-              <p className="text-gray-500 text-sm mb-4">
-                Modifique abaixo as informações da sua ONG. Clique em SALVAR
-                ALTERAÇÕES e seus dados serão atualizados.
+              <p className="text-gray-500 text-sm mb-4 leading-relaxed">
+                Modifique abaixo as informações da sua ONG. Clique em <strong>SALVAR ALTERAÇÕES</strong> e seus dados serão atualizados.
               </p>
 
-              <div className="grid grid-cols-1 gap-4 mt-6">
+              <div className="space-y-4">
                 <div className="flex flex-col">
                   <label className="text-sm text-gray-600 mb-1">Nome</label>
                   <input
-                    className="p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="Nome da ONG"
                     value={editFields.nome}
-                    onChange={(e) =>
-                      setEditFields({ ...editFields, nome: e.target.value })
-                    }
+                    onChange={(e) => setEditFields({ ...editFields, nome: e.target.value })}
                   />
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">
-                    Descrição
-                  </label>
+                  <label className="text-sm text-gray-600 mb-1">Descrição</label>
                   <textarea
-                    id="descricao"
-                    className="p-4 border border-gray-300 rounded-[16px] resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="Descrição da ONG"
                     rows={3}
+                    className="p-3 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="Descrição da ONG"
                     value={editFields.descricao}
-                    onChange={(e) =>
-                      setEditFields({
-                        ...editFields,
-                        descricao: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setEditFields({ ...editFields, descricao: e.target.value })}
                   />
                 </div>
 
                 <div className="flex flex-col">
                   <label className="text-sm text-gray-600 mb-1">Telefone</label>
                   <input
-                    className="p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="(xx) xxxxx-xxxx"
                     value={editFields.telefone}
-                    onChange={(e) =>
-                      setEditFields({ ...editFields, telefone: e.target.value })
-                    }
+                    onChange={(e) => setEditFields({ ...editFields, telefone: e.target.value })}
                   />
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">
-                    Instagram
-                  </label>
+                  <label className="text-sm text-gray-600 mb-1">Instagram</label>
                   <input
-                    className="p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     placeholder="Link do Instagram"
                     value={editFields.instagram}
-                    onChange={(e) =>
-                      setEditFields({
-                        ...editFields,
-                        instagram: e.target.value,
-                      })
-                    }
+                    onChange={(e) => setEditFields({ ...editFields, instagram: e.target.value })}
                   />
                 </div>
 
                 <div className="flex flex-col">
-                  <label className="text-sm text-gray-600 mb-1">
-                    Ano de fundação
-                  </label>
+                  <label className="text-sm text-gray-600 mb-1">Ano de fundação</label>
                   <input
                     type="date"
-                    className="p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     value={editFields.fundacao}
-                    onChange={(e) =>
-                      setEditFields({ ...editFields, fundacao: e.target.value })
-                    }
+                    onChange={(e) => setEditFields({ ...editFields, fundacao: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 flex justify-between">
+              <div className="mt-6 flex flex-col sm:flex-row justify-between gap-3">
                 <button
-                  className="px-5 py-2 border border-gray-400 text-gray-600 rounded-[16px] hover:bg-gray-300 transition-all"
+                  className="w-full sm:w-auto px-6 py-2 border border-gray-400 text-gray-700 rounded-full hover:bg-gray-200 transition"
                   onClick={() => setShowEditOngModal(false)}
                 >
                   Cancelar
                 </button>
                 <button
                   id="salvarOngs"
-                  className="px-5 py-2 bg-blue-600 text-white rounded-[16px] hover:bg-blue-500 transition-all"
+                  className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition"
                   onClick={handleSaveEdit}
                 >
                   Salvar alterações

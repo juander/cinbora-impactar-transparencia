@@ -6,23 +6,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Personaliza a barra de rolagem para um tom mais neutro */
-.scrollbar-custom::-webkit-scrollbar {
-  width: 8px; /* Reduz um pouco a largura */
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background: #b0b0b0; /* Cinza suave */
-  border-radius: 6px;
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background: #909090; /* Um pouco mais escuro no hover */
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background: #f5f5f5; /* Fundo levemente cinza */
-}
 
 input::-ms-reveal,
 input::-ms-clear,
@@ -37,6 +20,18 @@ input::-webkit-outer-spin-button {
     animation: fadeIn 0.3s ease-in-out;
   }
 
+  .animate-scale-in {
+    animation: scaleIn 0.25s ease-out;
+  }
+
+  .animate-pulse-in {
+    animation: pulseIn 0.6s ease-in-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.4s ease-out;
+  }
+
   @keyframes fadeIn {
     0% {
       opacity: 0;
@@ -47,11 +42,50 @@ input::-webkit-outer-spin-button {
       transform: scale(1);
     }
   }
+
+  @keyframes scaleIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pulseIn {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) translateY(20px);
+    }
+    60% {
+      opacity: 1;
+      transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+      transform: scale(1) translateY(0);
+    }
+  }
 }
+
 
 
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
-

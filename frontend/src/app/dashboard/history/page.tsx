@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import Cookies from "js-cookie";
-import { API_BASE_URL } from "@/config/api"
 
 interface LogChanges {
   name?: string;
@@ -50,7 +49,29 @@ const keyTranslations: Record<string, string> = {
   ano: "Ano",
   totalExpenses: "Total de Despesas",
   expensesByCategory: "Despesas por Categoria",
+  start_year: "Ano de início",
+  contact_phone: "Número para contato",
+  instagram_link: "Instagram",
+  deletedAction: "Ação deletada",
+  categorysExpenses: "Despesas por categoria"
 };
+
+const valueTranslations: Record<string, string> = {
+  "tax invoice": "Nota Fiscal",
+  "report": "Relatório",
+  "video": "Vídeo",
+  "image": "Imagem",
+  "other": "Outro"
+};
+
+const translateValue = (value: any): string => {
+  if (typeof value === "string" && valueTranslations[value]) {
+    return valueTranslations[value];
+  }
+  return value;
+};
+
+
 
 const HistoryPage: React.FC = () => {
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
@@ -66,7 +87,7 @@ const HistoryPage: React.FC = () => {
     const token = Cookies.get("auth_token");
     if (!token) return setLoading(false);
     try {
-      const res = await fetch(`${API_BASE_URL}/logs`, {
+      const res = await fetch("http://127.0.0.1:3333/logs", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error(res.statusText);
@@ -79,43 +100,31 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+  useEffect(() => { fetchLogs(); }, []);
 
   const groupLogsByDate = (logsData: Log[]): GroupedLogs =>
     logsData.reduce((acc, log) => {
       const d = new Date(log.timestamp);
-      const dateKey = `${d.getDate()} de ${
-        [
-          "janeiro",
-          "fevereiro",
-          "março",
-          "abril",
-          "maio",
-          "junho",
-          "julho",
-          "agosto",
-          "setembro",
-          "outubro",
-          "novembro",
-          "dezembro",
-        ][d.getMonth()]
-      } de ${d.getFullYear()}`;
+      const dateKey = `${d.getUTCDate()} de ${[
+        "janeiro","fevereiro","março","abril","maio","junho",
+        "julho","agosto","setembro","outubro","novembro","dezembro"][d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
       (acc[dateKey] = acc[dateKey] || []).push(log);
       return acc;
     }, {} as GroupedLogs);
 
   const formatTime = (timestamp: string) => {
     const d = new Date(timestamp);
-    return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+    return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`;
   };
 
   const formatChangesForDisplay = (log: Log): string[] => {
-    const { changes, model, action } = log;
+    const { changes, model } = log;
     if (!changes || typeof changes !== "object") return [];
-    const formatCurrency = (value: number) => `R$ ${value.toLocaleString("pt-BR")}`;
+  
+    const formatCurrency = (value: number) =>
+      `R$ ${value.toLocaleString("pt-BR")}`;
     const translateKey = (key: string) => keyTranslations[key] || key;
+  
     switch (model) {
       case "Arquivo da ONG":
       case "Arquivo da Ação":
@@ -130,16 +139,29 @@ const HistoryPage: React.FC = () => {
                     ? `${(Number(value) / 1024).toFixed(2)} KB`
                     : `${(Number(value) / 1048576).toFixed(2)} MB`
                 }"`
-              : `${translateKey(key)}: "${value}"`
+              : `${translateKey(key)}: "${translateValue(value)}"`
           );
-      case "Ação":
-        return Object.entries(changes)
-          .filter(([key]) => key !== "aws_url")
-          .map(([key, value]) =>
-            ["spent", "goal", "colected"].includes(key) && typeof value === "number"
-              ? `${translateKey(key)}: "${formatCurrency(value)}"`
-              : `${translateKey(key)}: "${value}"`
-          );
+          case "Ação":
+            return Object.entries(changes)
+              .filter(([key]) => key !== "aws_url")
+              .flatMap(([key, value]) => {
+                if (["spent", "goal", "colected"].includes(key) && typeof value === "number") {
+                  return [`${translateKey(key)}: "${formatCurrency(value)}"`];
+                }
+          
+                if (typeof value === "object" && value !== null) {
+                  return [
+                    `${translateKey(key)}:`,
+                    ...Object.entries(value).map(
+                      ([subKey, subVal]) =>
+                        `• ${translateKey(subKey)}: "${typeof subVal === "number" ? formatCurrency(subVal) : translateValue(subVal)}"`
+                    )
+                  ];
+                }
+          
+                return [`${translateKey(key)}: "${translateValue(value)}"`];
+              });
+          
       case "Gráfico de despesas": {
         const despesas = changes.expensesByCategory || changes.categorysExpenses || changes;
         return Object.entries(despesas).map(
@@ -148,11 +170,11 @@ const HistoryPage: React.FC = () => {
       }
       default:
         return Object.entries(changes).map(
-          ([key, value]) => `${translateKey(key)}: "${value}"`
+          ([key, value]) => `${translateKey(key)}: "${translateValue(value)}"`
         );
     }
   };
-
+  
   const getLogUniqueKey = (log: Log): string => {
     if (log.id) return log.id;
     return new Date(log.timestamp).getTime().toString();
@@ -202,11 +224,11 @@ const HistoryPage: React.FC = () => {
                         </div>
                       </button>
                       {openSections[logKey] && (
-                        <div className="px-4 pb-4 text-sm text-gray-600 border-t overflow-x-auto">
+                        <div className="px-4 pb-4 text-sm text-gray-600 border-t">
                           <p className="font-semibold mt-2">Mudanças:</p>
                           <ul className="list-disc list-inside space-y-1 mt-1">
                             {formatChangesForDisplay(item).map((change, idx) => (
-                              <li key={idx} className="break-words whitespace-normal">{change}</li>
+                              <li key={idx}>{change}</li>
                             ))}
                           </ul>
                         </div>

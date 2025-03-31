@@ -74,12 +74,28 @@ export default function Balance() {
   const [visibleLines, setVisibleLines] = useState<{ [key: string]: boolean }>({});
   const [actionColors, setActionColors] = useState<{ [key: string]: string }>({});
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
+  // Add a refresh key to force re-renders when needed
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Add an event listener to refresh data when requested
+  useEffect(() => {
+    const handleRefreshBalance = () => {
+      // Force the component to refetch data
+      setRefreshKey(Date.now());
+    };
+    
+    window.addEventListener('refreshBalance', handleRefreshBalance);
+    
+    return () => {
+      window.removeEventListener('refreshBalance', handleRefreshBalance);
+    };
+  }, []);
 
   useEffect(() => {
     const ngoId = Cookies.get("ngo_id");
     if (!ngoId) return;
   
-    fetch(`${API_BASE_URL}/ongs/${ngoId}`)
+    fetch(`${API_BASE_URL}/ongs/${ngoId}?nocache=${Date.now()}`)  // Add cache-busting
       .then((res) => res.json())
       .then((response: NgoData) => {
 
@@ -165,7 +181,7 @@ export default function Balance() {
         if (!selectedYear) setSelectedYear(sortedYears[0]);
       })
       .catch(error => console.error("Error fetching NGO data:", error));
-}, [selectedYear]);
+}, [selectedYear, refreshKey]);
 
   
 

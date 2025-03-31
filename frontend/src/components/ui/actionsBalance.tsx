@@ -171,13 +171,14 @@ export default function Balance() {
               {Object.keys(visibleLines).map((line) => (
                 <DropdownMenuCheckboxItem
                   key={line}
+                  title={line}
                   checked={visibleLines[line]}
                   onCheckedChange={() =>
                     setVisibleLines((prev) => ({ ...prev, [line]: !prev[line] }))
                   }
                   className="text-2xl text-gray-800 font-normal"
                 >
-                  {line}
+                  {line.length > 20 ? line.slice(0, 30) + "..." : line}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -204,9 +205,9 @@ export default function Balance() {
           </DropdownMenu>
         </div>
 
-        <div className="rounded-3xl border-4 border-[#00B3FF] p-0 shadow-xl">
+        <div className="rounded-3xl border-4 border-[#00B3FF] p-8 shadow-xl">
           <ResponsiveContainer width="100%" height={700}>
-            <LineChart data={data} margin={{ top: 40, right: 40, left: 20, bottom: 50 }}>
+            <LineChart data={data} margin={{ top: 40, right: 20, left: 0, bottom: 50 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="month"
@@ -217,19 +218,17 @@ export default function Balance() {
                 tick={{ fontSize: 16 }}
               />
               <YAxis
-                label={{
-                  angle: -90,
-                  position: "insideLeft",
-                  fontSize: 18,
-                }}
+                className="max-sm:none"
+                label={{ value: "", angle: -90, position: "insideLeft", fontSize: 18 }}
                 tick={{ fontSize: 16 }}
               />
               <Tooltip
-                formatter={(value: any) =>
-                  `R$ ${Number(value).toLocaleString("pt-BR", {
+                formatter={(value: any, name: string) => {
+                  const truncated = name.length > 30 ? name.slice(0, 30) + "..." : name;
+                  return [`R$ ${Number(value).toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
-                  })}`
-                }
+                  })}`, truncated];
+                }}
                 labelFormatter={(label: string) => {
                   const index = monthNames.indexOf(label)
                   return index >= 0 ? fullMonthNames[index] : label
@@ -253,12 +252,14 @@ export default function Balance() {
 
           <div className="grid grid-cols-4 gap-6 mt-6 text-xl">
             {Object.keys(visibleLines).map((key) => (
-              <div key={key} className="flex flex-col items-center">
+              <div key={key} className="flex flex-col items-center max-md:overflow-scroll" title={key}>
                 <span
-                  className="w-48 h-4 rounded-full"
+                  className="w-48 h-4 rounded-full max-xl:w-32 max-md:w-24 max-sm:w-12"
                   style={{ backgroundColor: actionColors[key] }}
                 ></span>
-                <span className="text-gray-700 font-bold text-3xl">{key}</span>
+                <span className="text-gray-700 font-bold text-3xl max-xl:text-xl max-md:text-[10px]">
+                  {key.length > 15 ? key.slice(0, 15) + "..." : key}
+                </span>
               </div>
             ))}
           </div>
