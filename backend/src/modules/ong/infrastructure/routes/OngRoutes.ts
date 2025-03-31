@@ -17,22 +17,11 @@ async function ongRoutes(fastify: FastifyInstance) {
   // Rota para devolver a ONG e seu gráfico
   fastify.get<{ Params: { id: number } }>(
     "/ongs/:id", 
-    cachedRoute(
-      fastify, 
       async (request, reply) => {
         const result = await ongController.getOneWithGrafic(request);
         return reply.send(result);
       },
-      { 
-        ttl: 604800, // Cache de 1 semana
-        keyGenerator: (req) => {
-          const params = req.params as { id: number };
-          return `ong:${params.id}:with-grafic`;
-        }, 
-        tags: ['ongs'] // Para invalidação por tag
-      }
-    )
-  );
+    );
 
   // Rota para atualizar o gráfico da ONG
   fastify.put("/ongs/grafic", { preHandler: [authMiddleware], schema: updateNgoGraficSchema }, async (request, reply) => {
