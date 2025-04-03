@@ -1,51 +1,43 @@
+# Etapa 1: Build
 FROM node:18-alpine AS builder
 
 WORKDIR /build
 
-# Copy files needed for dependencies
+# Copiar arquivos necessários para instalar dependências
 COPY package*.json tsconfig.json module-alias.js ./
 
-# Install dependencies including TypeScript explicitly
-RUN npm ci --prefer-offline && \
-    npm install -g typescript
+# Instalar todas as dependências (produção e desenvolvimento)
+RUN npm ci --prefer-offline
 
-# Copy the backend source code
+# Copiar o código-fonte do backend
 COPY . ./
 
-# List source files to verify they exist before building
-RUN ls -la src/ && \
-    cat src/server.ts
-
-# Build TypeScript with explicit compiler options
+# Compilar o TypeScript para JavaScript
 RUN npx tsc --project tsconfig.json
 
-# Debug: Show what was actually built
-RUN ls -la dist/ || echo "dist directory is missing or empty" && \
-    find dist -type f | sort
-
+# Etapa 2: Produção
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Install MongoDB tools if needed
+# Instalar ferramentas adicionais necessárias
 RUN apk add --no-cache mongodb-tools bash
 
-# Copy built files and dependencies
+# Copiar apenas os arquivos necessários para produção
 COPY --from=builder /build/dist ./dist
-COPY --from=builder /build/node_modules ./node_modules
-COPY --from=builder /build/package.json ./
-COPY --from=builder /build/module-alias.js ./
-COPY --from=builder /build/tsconfig.json ./tsconfig.json
+COPY --from=builder /build/package.json ./package.json
+COPY --from=builder /build/package-lock.json ./package-lock.json
+COPY --from=builder /build/module-alias.js ./module-alias.js
 
-# Explicitly install mongodb like in your original Dockerfile
-RUN npm install mongodb
+# Instalar dependências de produção e o driver do MongoDB explicitamente
+RUN npm ci --only=production --prefer-offline && \
+    npm install mongodb
 
-# Add MongoDB check script if needed
-COPY check-mongo.js ./check-mongo.js
-
-# Verify critical files exist
+# Verificar se o arquivo principal existe
 RUN test -f dist/src/server.js || { echo "ERROR: Required file dist/src/server.js is missing!"; exit 1; }
 
-EXPOSE 3333
+# Expor a porta do backend
+EXPOSE 3015
 
+# Comando para iniciar o servidor
 CMD ["node", "-r", "module-alias/register", "dist/src/server.js"]

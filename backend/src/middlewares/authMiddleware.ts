@@ -18,27 +18,52 @@ declare module "fastify" {
 }
 
 async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
-  console.log("Cookies recebidos:", request.cookies); // Log dos cookies recebidos
+  //console.log("Cookies recebidos:", request.cookies); // Log dos cookies recebidos
 
-  const authHeader = request.headers.authorization;
-  const token = authHeader?.split(" ")[1] || request.cookies.auth_token;
+  //const authHeader = request.headers.authorization;
+  //const token = authHeader?.split(" ")[1] || request.cookies.auth_token;
 
-  console.log("Token recebido:", token); // Log do token recebido
+  //console.log("Token recebido:", token); // Log do token recebido
 
-  if (!token) {
-    console.log("Token não fornecido");
-    reply.status(401).send({ error: "Token not provided" });
-    return;
-  }
+  //if (!token) {
+  //  console.log("Token não fornecido");
+  //  reply.status(401).send({ error: "Token not provided" });
+  //  return;
+  //}
 
-  try {
-    const decoded = jwtService.verifyToken(token);
-    console.log("Token decodificado:", decoded); // Log do token decodificado
+  //try {
+    //const decoded = jwtService.verifyToken(token);
+    //console.log("Token decodificado:", decoded); // Log do token decodificado
 
-    if (typeof decoded === 'string') {
-      reply.status(401).send({ error: "Invalid token" });
+    //if (typeof decoded === 'string') {
+    //  reply.status(401).send({ error: "Invalid token" });
+    //  return;
+    //}
+
+    //request.user = {
+    //  id: decoded.userId,
+    //  name: decoded.name,
+    //  email: decoded.email,
+    //  ngoId: decoded.ngoId,
+    //  profileUrl: decoded.profileUrl,
+    //};
+
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader) {
+      reply.status(401).send({ error: "Token not provided" });
       return;
     }
+
+    const [, token] = authHeader.split(" ");
+
+    try {
+      const decoded = jwtService.verifyToken(token);
+
+      if (typeof decoded === 'string') {
+        reply.status(401).send({ error: "Invalid token" });
+        return;
+      }
 
     request.user = {
       id: decoded.userId,

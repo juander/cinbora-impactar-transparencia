@@ -9,7 +9,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
     ports:
-      - "8080:27017"
+      - "27017:27017"
     volumes:
       - cinbora_mongodb_data:/data/db
     networks:
@@ -29,6 +29,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - NEXT_PUBLIC_API_BASE_URL=/api
+      - PORT=3005
+    ports:
+    - "3005:3005"
     networks:
       - app-network
       
@@ -38,6 +41,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
+      - BACKEND_PORT=3015
+      - FRONTEND_URL=http://localhost:3005
+
       - MONGO_HOST=mongodb
       - MONGO_PORT=${MONGO_PORT:-27017}
       - MONGO_USERNAME=${MONGO_USERNAME}
@@ -50,8 +56,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
       - NODE_ENV=${NODE_ENV:-development}
-
-      
+    ports:
+    - "3015:3015"
     depends_on:
       - mongodb
     networks:

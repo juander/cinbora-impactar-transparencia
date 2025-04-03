@@ -85,7 +85,7 @@ const start = async () => {
     
     await server.register(routes);
 
-    await server.listen({ port: 3333, host: '0.0.0.0' });
+    await server.listen({ port: Number(config.port), host: '0.0.0.0' });
   } catch (err) {
     server.log.error(err);
     process.exit(1);

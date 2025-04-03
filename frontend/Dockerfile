@@ -42,10 +42,8 @@ RUN mkdir -p public
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-EXPOSE 3000
+EXPOSE 3005
 
 # Run the Next.js server
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "--port", "3005"]

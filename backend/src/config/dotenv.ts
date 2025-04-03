@@ -23,6 +23,7 @@ const constructDatabaseUrl = (): string => {
 
 export const config = {
   secretKey: process.env.SECRET_KEY as string,
+  port: process.env.BACKEND_PORT,
   databaseUrl: constructDatabaseUrl(),
   apiLink: process.env.API_LINK,
   nodeEnv: process.env.NODE_ENV,
