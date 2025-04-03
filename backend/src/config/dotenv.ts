@@ -23,7 +23,7 @@ const constructDatabaseUrl = (): string => {
 
 export const config = {
   secretKey: process.env.SECRET_KEY as string,
-  databaseUrl: "mongodb+srv://cinbora_transparencia_backend:xsVb7CyyVucByMqy@cluster0.tg47j.mongodb.net/transparencia_db?retryWrites=true&w=majority",
+  databaseUrl: constructDatabaseUrl(),
   apiLink: process.env.API_LINK,
   nodeEnv: process.env.NODE_ENV,
   frontendUrl: process.env.FRONTEND_URL,

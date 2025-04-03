@@ -96,16 +96,16 @@ class AuthController {
       });
 
       // Configurar o tempo de expiração do cookie com base no rememberMe
-      const maxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 4; // 7 dias ou 4 horas
+      //const maxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 4; // 7 dias ou 4 horas
 
       // Definir o token como um cookie
-      reply.setCookie("auth_token", token, {
-        httpOnly: true, // O cookie não pode ser acessado via JavaScript
-        secure: config.nodeEnv === "production", // Apenas HTTPS em produção
-        sameSite: "strict", // Evita envio em requisições de outros sites
-        path: "/", // Disponível em toda a aplicação
-        maxAge, // Tempo de expiração do cookie
-      });
+      //reply.setCookie("auth_token", token, {
+      //  httpOnly: true, // O cookie não pode ser acessado via JavaScript
+      //  secure: config.nodeEnv === "production", // Apenas HTTPS em produção
+      //  sameSite: "strict", // Evita envio em requisições de outros sites
+      //  path: "/", // Disponível em toda a aplicação
+      //  maxAge, // Tempo de expiração do cookie
+      //});
 
       // Buscar ações da ONG
       const actions = await this.getActionService.executeByNgoId(ngo.id.toString());
