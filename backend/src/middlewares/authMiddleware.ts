@@ -18,17 +18,22 @@ declare module "fastify" {
 }
 
 async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
-  const authHeader = request.headers.authorization;
+  console.log("Cookies recebidos:", request.cookies); // Log dos cookies recebidos
 
-  if (!authHeader) {
+  const authHeader = request.headers.authorization;
+  const token = authHeader?.split(" ")[1] || request.cookies.auth_token;
+
+  console.log("Token recebido:", token); // Log do token recebido
+
+  if (!token) {
+    console.log("Token não fornecido");
     reply.status(401).send({ error: "Token not provided" });
     return;
   }
 
-  const [, token] = authHeader.split(" ");
-
   try {
     const decoded = jwtService.verifyToken(token);
+    console.log("Token decodificado:", decoded); // Log do token decodificado
 
     if (typeof decoded === 'string') {
       reply.status(401).send({ error: "Invalid token" });
@@ -42,8 +47,8 @@ async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
       ngoId: decoded.ngoId,
       profileUrl: decoded.profileUrl,
     };
-    
-  } catch {
+  } catch (error) {
+    console.log("Erro ao verificar o token:", error); // Log do erro
     reply.status(401).send({ error: "Invalid token" });
   }
 }

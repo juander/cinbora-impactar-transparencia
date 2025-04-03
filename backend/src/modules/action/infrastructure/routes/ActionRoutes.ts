@@ -17,7 +17,7 @@ async function actionRoutes(fastify: FastifyInstance) {
         return reply.send(result);
       },
       { 
-        ttl: 84600, // Cache de 1 dia
+        ttl: 21600, // Cache de 6h
         keyGenerator: (req) => {
           const params = req.params as OngActionParams;
           return `actions:${params.actionId}:with-expenses`;
@@ -37,7 +37,7 @@ async function actionRoutes(fastify: FastifyInstance) {
         return reply.send(actions);
       },
       { 
-        ttl: 84600, // Cache por 1 dia
+        ttl: 21600, // Cache por 6h
         keyGenerator: (req) => {
           // Usar o parâmetro como está na URL
           const params = req.params as { id: number };

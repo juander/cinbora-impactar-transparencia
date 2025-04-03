@@ -1,16 +1,15 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { localCache, keyPatternMap } from "@shared/cacheClient";
 import cacheClient from "@shared/cacheClient";
-import { config } from "@config/dotenv";
 
 // Middleware de proteção para rotas administrativas
 async function adminAuthMiddleware(request: FastifyRequest, reply: FastifyReply) {
   // 1. Verificar token de administração no header
   const adminToken = request.headers['x-admin-token'];
-  const configuredToken = process.env.ADMIN_TOKEN || 'your-secure-token-here';
+  const configuredToken = process.env.ADMIN_TOKEN;
   
   // 2. Lista de IPs permitidos (opcional)
-  const allowedIPs = (process.env.ALLOWED_ADMIN_IPS || '127.0.0.1,::1').split(',');
+  const allowedIPs = (process.env.ALLOWED_ADMIN_IPS).split(',');
   const clientIP = request.ip;
   
   // Verificar se o token é válido OU se o IP está na lista permitida

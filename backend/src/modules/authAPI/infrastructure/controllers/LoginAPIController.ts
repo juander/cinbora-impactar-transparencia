@@ -10,9 +10,13 @@ class LoginAPIController {
 
   async handle(request: FastifyRequest, reply: FastifyReply) {
     try {
-      const { email, password } = request.body as { email: string; password: string };
+      const { email, password, rememberMe } = request.body as {
+        email: string;
+        password: string;
+        rememberMe: boolean;
+      };
       
-      const authResult = await this.authController.authenticate(email, password);
+      const authResult = await this.authController.authenticate(email, password, reply, rememberMe);
       
       // Garantir que a resposta siga o formato esperado pelo schema
       const response = {

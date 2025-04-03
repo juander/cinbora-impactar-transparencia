@@ -4,6 +4,7 @@ import Fastify from "fastify";
 import { config } from "./config/dotenv";
 import { routes } from "./routes/index";
 import cors from "@fastify/cors";
+import fastifyCookie from "@fastify/cookie";
 import { fastifySwagger } from "@fastify/swagger";
 import { fastifySwaggerUi } from "@fastify/swagger-ui";
 import { validatorCompiler, serializerCompiler, type ZodTypeProvider, jsonSchemaTransform } from "fastify-type-provider-zod";
@@ -37,10 +38,19 @@ const start = async () => {
     await mongoClient.connect();
 
     await server.register(cors, {
-      origin: '*',
+      origin: config.frontendUrl,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
+    });
+
+    await server.register(fastifyCookie, {
+      secret: config.secretKey, // Chave secreta para assinar cookies
+      parseOptions: {
+        httpOnly: true, // Garante que os cookies sejam acessíveis apenas pelo servidor
+        secure: config.nodeEnv === "production", // Apenas HTTPS em produção
+        sameSite: "strict", // Evita envio em requisições de outros sites
+      },
     });
 
     await server.register(fastifySwagger, {

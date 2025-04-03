@@ -6,7 +6,10 @@ async function AuthRoutes(fastify: FastifyInstance) {
     // Usar a função factory para obter o controller com acesso ao fastify
     const loginAPIController = getLoginAPIController(fastify);
     
-    fastify.post("/login", { schema: loginSchema }, loginAPIController.handle.bind(loginAPIController));
+    fastify.post("/login", { schema: loginSchema }, async (request, reply) => {
+        // Passar o request e o reply diretamente para o método handle
+        return loginAPIController.handle(request, reply);
+    });
 }
 
 export { AuthRoutes };

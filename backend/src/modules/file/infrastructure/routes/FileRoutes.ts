@@ -156,7 +156,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngImages(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:images`;
@@ -172,7 +172,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngVideos(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:videos`;
@@ -188,7 +188,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngReportFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:reports`;
@@ -204,7 +204,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngTaxInvoicesFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:tax_invoices`;
@@ -220,7 +220,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getOngOtherFiles(request as FastifyRequest<{ Params: OngParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as OngParams;
           return `ongs:${params.ngoId}:files:others`;
@@ -237,7 +237,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionImages(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:images`;
@@ -253,7 +253,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionVideos(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:videos`;
@@ -269,7 +269,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionReportFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:reports`;
@@ -285,7 +285,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionTaxInvoicesFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:tax_invoices`;
@@ -301,7 +301,7 @@ async function fileRoutes(fastify: FastifyInstance) {
       fastify, 
       ((request, reply) => fileController.getActionOtherFiles(request as FastifyRequest<{ Params: ActionParams }>, reply)) as RouteHandler,
       { 
-        ttl: 84600,
+        ttl: 21600,
         keyGenerator: (req) => {
           const params = req.params as ActionParams;
           return `actions:${params.actionId}:files:others`;

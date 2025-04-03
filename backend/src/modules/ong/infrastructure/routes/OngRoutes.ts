@@ -24,7 +24,7 @@ async function ongRoutes(fastify: FastifyInstance) {
         return reply.send(result);
       },
       { 
-        ttl: 604800, // Cache de 1 semana
+        ttl: 21600, // Cache de 6h
         keyGenerator: (req) => {
           const params = req.params as { id: number };
           return `ong:${params.id}:with-grafic`;
@@ -54,7 +54,7 @@ async function ongRoutes(fastify: FastifyInstance) {
         return reply.send(ngos);
       },
       { 
-        ttl: 84600, // Cache por 1 dia
+        ttl: 21600, // Cache por 6h
         keyGenerator: () => `ongs:list`, // Chave específica e simples
         tags: ['ongs']
       }
@@ -87,7 +87,7 @@ async function ongRoutes(fastify: FastifyInstance) {
   // Rota para atualizar uma ONG
   fastify.put("/ongs", { preHandler: [authMiddleware], schema: updateOngSchema }, async (request, reply) => {
     const result = await ongController.update(request);
-    const ongId = (request.body as any).id;
+    const ongId = request.user.ngoId;
     
     // Chaves padronizadas
     await Promise.all([

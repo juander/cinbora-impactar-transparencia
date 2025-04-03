@@ -4,8 +4,9 @@ import { JWTService } from "@shared/jwtService";
 import { CreateUserService, GetUserService } from "@modules/user";
 import { CreateOngService, GetOngService } from "@modules/ong";
 import { GetActionService } from "@modules/action";
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyReply } from "fastify";
 import { invalidateCache } from "@middlewares/cacheMiddleware";
+import { config } from "@config/dotenv";
 
 class AuthController {
   private getExternalDataService: GetExternalDataService;
@@ -37,7 +38,7 @@ class AuthController {
     this.fastify = fastify;
   }
 
-  async authenticate(email: string, password: string) {
+  async authenticate(email: string, password: string, reply: FastifyReply, rememberMe: boolean) {
     try {
       const data = await this.getExternalDataService.execute({ email, password });
 
@@ -86,7 +87,25 @@ class AuthController {
         });
       }
 
-      const token = this.jwtService.generateToken({ userId: user.id, name: user.name, email: user.email, ngoId: user.ngoId, profileUrl: user.profileUrl });
+      const token = this.jwtService.generateToken({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        ngoId: user.ngoId,
+        profileUrl: user.profileUrl,
+      });
+
+      // Configurar o tempo de expiração do cookie com base no rememberMe
+      const maxAge = rememberMe ? 60 * 60 * 24 * 7 : 60 * 60 * 4; // 7 dias ou 4 horas
+
+      // Definir o token como um cookie
+      reply.setCookie("auth_token", token, {
+        httpOnly: true, // O cookie não pode ser acessado via JavaScript
+        secure: config.nodeEnv === "production", // Apenas HTTPS em produção
+        sameSite: "strict", // Evita envio em requisições de outros sites
+        path: "/", // Disponível em toda a aplicação
+        maxAge, // Tempo de expiração do cookie
+      });
 
       // Buscar ações da ONG
       const actions = await this.getActionService.executeByNgoId(ngo.id.toString());

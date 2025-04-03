@@ -32,9 +32,10 @@ export default function LoginPage() {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password,rememberMe }),
+        credentials: "include", // Inclui cookies na requisição
       });
-
+  
       if (!response.ok) {
         if (response.status === 401) {
           toast.error("Credenciais inválidas. Verifique seu e-mail e senha.");
@@ -43,37 +44,18 @@ export default function LoginPage() {
         }
         throw new Error("Erro no login");
       }
-
+  
       const data = await response.json();
-
-      if (rememberMe) {
-        Cookies.set("auth_token", data.token, {
-          expires: 7,
-          secure: true,
-          sameSite: "Strict"
-        });
-      } else {
-        const expirationDate = new Date();
-        expirationDate.setTime(expirationDate.getTime() + (4 * 60 * 60 * 1000));
-        
-        Cookies.set("auth_token", data.token, {
-          expires: expirationDate,
-          secure: true,
-          sameSite: "Strict"
-        });
-      }
-      
-      
-
+  
       if (data.user?.name) {
-        Cookies.set("user_name", data.user.name);
+        Cookies.set("user_name", data.user.name); // Apenas cookies não relacionados ao token
         toast.success(`Bem-vindo, ${data.user.name}!`);
       }
-
+  
       if (data.ngo?.name) {
         Cookies.set("ngo_name", data.ngo.name);
       }
-
+  
       if (data.ngo?.id) {
         Cookies.set("ngo_id", data.ngo.id);
       }

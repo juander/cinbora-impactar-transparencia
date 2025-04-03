@@ -2,14 +2,33 @@
 require('dotenv').config(); 
 const { MongoClient } = require('mongodb');
 
+// Construct database 
+const constructDatabaseUrl = () => {
+  const defaultUrl = process.env.DATABASE_URL;
+  if (defaultUrl) return defaultUrl;
+
+  const host = process.env.MONGO_HOST || (process.env.NODE_ENV === 'production' ? 'mongodb' : 'localhost');
+  const port = process.env.MONGO_PORT || '27017';
+  const username = process.env.MONGO_USERNAME;
+  const password = process.env.MONGO_PASSWORD;
+  const database = process.env.MONGO_DATABASE;
+  const authSource = process.env.MONGO_AUTH_SOURCE || 'admin';
+
+  if (!host || !port || !username || !password || !database) {
+    throw new Error('Missing required MongoDB environment variables');
+  }
+  
+  return `mongodb://${username}:${password}@${host}:${port}/${database}?authSource=${authSource}&directConnection=true`;
+};
+
 async function checkMongo() {
-  const uri = process.env.DATABASE_URL;
-  if (!uri) {
+  const url = constructDatabaseUrl();
+  if (!url) {
     console.error('DATABASE_URL não definida no ambiente');
     process.exit(1);
   }
 
-  const client = new MongoClient(uri, {
+  const client = new MongoClient(url, {
     serverSelectionTimeoutMS: 5000, // 5 segundos timeout para seleção de servidor
     connectTimeoutMS: 10000,        // 10 segundos timeout para conexão
   });
