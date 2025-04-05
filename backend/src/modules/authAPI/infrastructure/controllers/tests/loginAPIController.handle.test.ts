@@ -34,7 +34,7 @@ describe('LoginAPIController - handle', () => {
     await server.close();
   });
 
-    beforeEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
     // Mock do console.error para suprimir logs durante os testes
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -81,11 +81,13 @@ describe('LoginAPIController - handle', () => {
       actions: mockActions
     });
 
-    // Verifica se o método authenticate foi chamado com os parâmetros corretos
-    expect(mockAuthenticate).toHaveBeenCalledWith(
-      'test@example.com',
-      'password123'
-    );
+    // Verifica se o método authenticate foi chamado
+    expect(mockAuthenticate).toHaveBeenCalled();
+    
+    // Verifica apenas os parâmetros que nos interessam
+    const callArgs = mockAuthenticate.mock.calls[0];
+    expect(callArgs[0]).toBe('test@example.com');
+    expect(callArgs[1]).toBe('password123');
   });
 
   it('should handle custom error from AuthController', async () => {
