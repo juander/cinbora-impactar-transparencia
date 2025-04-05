@@ -24,7 +24,7 @@ RUN if [ -f next.config.mjs ]; then \
     fi
 
 # Set environment variables for build
-ENV NEXT_PUBLIC_API_BASE_URL=/api
+ENV NEXT_PUBLIC_API_BASE_URL=/cinboratransparecer/api
 
 # Build the Next.js app
 RUN npm run build

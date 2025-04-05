@@ -31,7 +31,7 @@ export default function ActionDetail() {
           const [hoveredCard, setHoveredCard] = useState(false);
 
           if (!acaoId) {
-            router.push("/")
+            router.push("/cinboratransparecer/")
             return null
           }
 
@@ -41,14 +41,14 @@ export default function ActionDetail() {
               .then(res => res.json())
               .then(data => {
                 if (!data.action) {
-                  router.push("/")
+                  router.push("/cinboratransparecer/")
                   return;
                 }
                 setAction(data.action)
               })
               .catch(err => {
                 console.error("Erro ao buscar ação:", err)
-                router.push("/")
+                router.push("/cinboratransparecer/")
               })
           }
         }, [acaoId, router])

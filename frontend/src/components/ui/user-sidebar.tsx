@@ -202,7 +202,7 @@ export function UserSidebar({
     Cookies.remove("user_email");
     Cookies.remove("ngo_id");
     Cookies.remove("ngo_name");
-    window.location.href = "/login";
+    window.location.href = "/cinboratransparecer/login";
   };
 
   const handleSaveEdit = () => {
@@ -496,14 +496,14 @@ export function UserSidebar({
               <div className="flex w-full gap-2 mt-6">
                 <Button
                   className="w-1/2 bg-blue-500 text-white rounded-full hover:bg-blue-700 transition-all shadow-md"
-                  onClick={() => (window.location.href = "/dashboard/ongs")}
+                  onClick={() => (window.location.href = "/cinboratransparecer/dashboard/ongs")}
                 >
                   Minha ONG
                 </Button>
                 <Button
                   id="historico"
                   className="w-1/2 bg-blue-800 text-white rounded-full hover:bg-blue-950 transition-all shadow-md"
-                  onClick={() => (window.location.href = "/dashboard/history")}
+                  onClick={() => (window.location.href = "/cinboratransparecer/dashboard/history")}
                 >
                   Histórico da ONG
                 </Button>

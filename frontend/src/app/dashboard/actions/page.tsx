@@ -83,7 +83,7 @@ export default function DashboardAction() {
         
         useEffect(() => {
           if (!token) {
-            router.push("/login");
+            router.push("/cinboratransparecer/login");
           }
         }, [token, router])
 
@@ -104,7 +104,7 @@ export default function DashboardAction() {
 
         useEffect(() => {
           if (!acaoId) {
-            router.push("/dashboard/ongs");
+            router.push("/cinboratransparecer/dashboard/ongs");
           }
         }, [acaoId, router])
 
@@ -385,7 +385,7 @@ export default function DashboardAction() {
             }
 
             toast.success("Ação deletada com sucesso!");
-            router.push("/dashboard/ongs");
+            router.push("/cinboratransparecer/dashboard/ongs");
           } catch (error) {
             console.error(error);
             toast.error("Erro ao deletar a ação.");

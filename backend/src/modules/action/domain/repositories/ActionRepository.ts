@@ -347,94 +347,46 @@ class ActionRepository {
 
   private async updateNgoGraphicAfterActionDeletion(ngoId: number, deletedActionName: string): Promise<void> {
     try {
-      // Get the remaining actions after deletion
-      const remainingActions = await ActionModel.find({ ngoId });
-      
-      // Create an object with only the remaining actions' expenses
-      const currentActionExpenses = {};
-      remainingActions.forEach(action => {
-        currentActionExpenses[action.name] = action.spent || 0;
-      });
-      
-      // Recalculate the total expenses based only on remaining actions
-      const totalExpenses = remainingActions.reduce((sum, action) => sum + (action.spent || 0), 0);
-      
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-  
-      // Use a direct MongoDB update operation with aggregation to:
-      // 1. Remove the deleted action from all expensesByAction records
-      // 2. Update today's record with the correct remaining actions
-      const ngoGraphic = await NgoGraphicModel.findOne({ ngoId });
-      if (!ngoGraphic) return;
-      
-      // Deep clone the expensesByAction array to avoid reference issues
-      const expensesArray = JSON.parse(JSON.stringify(ngoGraphic.expensesByAction || []));
-      
-      // Remove deleted action from all records
-      let hasUpdatedToday = false;
-      
-      for (let i = 0; i < expensesArray.length; i++) {
-        const yearEntry = expensesArray[i];
-        if (yearEntry.year === year) {
-          for (let j = 0; j < yearEntry.months.length; j++) {
-            const monthEntry = yearEntry.months[j];
-            if (monthEntry.month === month) {
-              for (let k = 0; k < monthEntry.dailyRecords.length; k++) {
-                const dailyRecord = monthEntry.dailyRecords[k];
-                if (dailyRecord.day === day) {
-                  // Found today's record - update it with only remaining actions
-                  dailyRecord.expensesByAction = { ...currentActionExpenses };
-                  hasUpdatedToday = true;
-                } else if (dailyRecord.expensesByAction && 
-                           dailyRecord.expensesByAction[deletedActionName] !== undefined) {
-                  // For other days, just remove the deleted action
-                  delete dailyRecord.expensesByAction[deletedActionName];
-                }
-              }
+        const ngoGraphic = await NgoGraphicModel.findOne({ ngoId });
+        if (!ngoGraphic) return;
+
+        // Deep clone the expensesByAction array to avoid reference issues
+        const expensesArray = JSON.parse(JSON.stringify(ngoGraphic.expensesByAction || []));
+
+        // Iterate over each year's data
+        for (let i = 0; i < expensesArray.length; i++) {
+            const yearEntry = expensesArray[i];
+
+            // Find the last month in the year
+            const lastMonth = yearEntry.months[yearEntry.months.length - 1];
+            if (!lastMonth) continue;
+
+            // Find the last daily record in the last month
+            const lastDailyRecord = lastMonth.dailyRecords[lastMonth.dailyRecords.length - 1];
+            if (!lastDailyRecord) continue;
+
+            // Remove the deleted action from the last daily record
+            if (lastDailyRecord.expensesByAction && lastDailyRecord.expensesByAction[deletedActionName] !== undefined) {
+                delete lastDailyRecord.expensesByAction[deletedActionName];
             }
-          }
         }
-      }
-      
-      // If today's record doesn't exist yet, create it
-      if (!hasUpdatedToday) {
-        // Find or create year entry
-        let yearEntry = expensesArray.find(entry => entry.year === year);
-        if (!yearEntry) {
-          yearEntry = { year, months: [] };
-          expensesArray.push(yearEntry);
-        }
-        
-        // Find or create month entry
-        let monthEntry = yearEntry.months.find(m => m.month === month);
-        if (!monthEntry) {
-          monthEntry = { month, dailyRecords: [] };
-          yearEntry.months.push(monthEntry);
-        }
-        
-        // Add today's record with only remaining actions
-        monthEntry.dailyRecords.push({
-          day,
-          expensesByAction: { ...currentActionExpenses }
-        });
-      }
-      
-      // Update the entire document with atomic operation
-      await NgoGraphicModel.updateOne(
-        { ngoId },
-        { 
-          $set: {
-            expensesByAction: expensesArray,
-            totalExpenses
-          }
-        }
-      );
-      
+
+        // Recalculate the total expenses based on remaining actions
+        const remainingActions = await ActionModel.find({ ngoId });
+        const totalExpenses = remainingActions.reduce((sum, action) => sum + (action.spent || 0), 0);
+
+        // Update the document with the modified expensesByAction array and totalExpenses
+        await NgoGraphicModel.updateOne(
+            { ngoId },
+            {
+                $set: {
+                    expensesByAction: expensesArray,
+                    totalExpenses
+                }
+            }
+        );
     } catch (error) {
-      console.error("Erro ao atualizar gráfico da ONG após exclusão da ação:", error);
+        console.error("Erro ao atualizar gráfico da ONG após exclusão da ação:", error);
     }
   }
 
@@ -505,6 +457,39 @@ class ActionRepository {
                 ngoId: action.ngoId,
                 categorysExpenses: expensesArray,
             });
+        }
+
+        // Identify excluded categories by comparing the newExpense with the last daily record of the current year
+        const previousCategories = existingExpenses?.categorysExpenses?.[existingExpenses.categorysExpenses.length - 1]?.months
+            ?.at(-1)?.dailyRecords?.at(-1)?.categorysExpenses || {};
+        const excludedCategories = Object.keys(previousCategories).filter(
+            (category) => !(category in newExpense)
+        );
+
+        if (excludedCategories.length > 0) {
+            // Remove excluded categories from the last JSON of previous years
+            for (let i = 0; i < expensesArray.length; i++) {
+                const yearEntry = expensesArray[i];
+                if (yearEntry.year >= year) continue; // Skip current or future years
+
+                const lastMonth = yearEntry.months.at(-1);
+                if (!lastMonth) continue;
+
+                const lastDailyRecord = lastMonth.dailyRecords.at(-1);
+                if (!lastDailyRecord) continue;
+
+                excludedCategories.forEach((category) => {
+                    if (lastDailyRecord.categorysExpenses?.[category] !== undefined) {
+                        delete lastDailyRecord.categorysExpenses[category];
+                    }
+                });
+            }
+
+            // Update the document with the modified expensesArray
+            await ActionExpensesGraficModel.updateOne(
+                { actionId },
+                { $set: { categorysExpenses: expensesArray } }
+            );
         }
 
         const allActions = await ActionModel.find({ ngoId: action.ngoId });

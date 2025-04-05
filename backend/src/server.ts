@@ -37,8 +37,24 @@ const start = async () => {
     const mongoClient = MongoClient.getInstance();
     await mongoClient.connect();
 
+    const allowedOrigins = [
+      'http://localhost',
+      'http://localhost:3005',
+      'http://cinboraimpactar.cin.ufpe.br',
+      'http://vm-cinboraimpactar.cin.ufpe.br',
+      'https://cinboraimpactar.cin.ufpe.br',
+      'https://vm-cinboraimpactar.cin.ufpe.br',
+    ];
+    
+
     await server.register(cors, {
-      origin: config.frontendUrl,
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true); 
+        } else {
+          callback(new Error("Not allowed by CORS"), false);
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
@@ -49,7 +65,7 @@ const start = async () => {
       parseOptions: {
         httpOnly: true, // Garante que os cookies sejam acessíveis apenas pelo servidor
         secure: config.nodeEnv === "production", // Apenas HTTPS em produção
-        sameSite: "strict", // Evita envio em requisições de outros sites
+        sameSite: "lax" // Permitir outros domínios 
       },
     });
 

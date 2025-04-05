@@ -22,6 +22,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="pt-br" className="h-full">
+      <head>
+        <link rel="icon" href="/cinboratransparecer/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/cinboratransparecer/apple-touch-icon.png" />
+      </head>
       <body className="min-h-screen h-full flex flex-col">
         <ToastProvider />
         <Header />

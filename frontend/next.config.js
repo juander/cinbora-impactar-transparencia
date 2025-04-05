@@ -1,15 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client"],
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
+  basePath: '/cinboratransparecer',
   swcMinify: true,
   // This will prevent static generation for routes that use search params
   // which resolves our build issues

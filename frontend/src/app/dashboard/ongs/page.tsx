@@ -800,7 +800,7 @@ const handleSave = async () => {
                             {/* Botão de Transparência com novo estilo e lógica */}
                             <Button
                               id="acao"
-                              onClick={() => router.push("./actions" + "?action_id=" + String(slide.id))}
+                              onClick={() => router.push("/dashboard/actions" + "?action_id=" + String(slide.id))}
                               className="w-4/5 h-full font-bold rounded-[34px] bg-[#294BB6] text-white border-solid border-[#2E4049] border hover:text-[#294BB6] hover:bg-white transition-all"
                             >
                               TRANSPARÊNCIA
