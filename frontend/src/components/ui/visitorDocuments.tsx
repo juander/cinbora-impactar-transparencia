@@ -1,53 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import arrowDown from "../../assets/downArrow.svg";
 import download from "../../assets/Documents.svg";
-import { API_BASE_URL } from "@/config/api"
+import { API_BASE_URL } from "@/config/api";
 
 interface FileObject {
   id: string;
   name: string;
   aws_url?: string;
 }
-
-const AccordionSection = ({
-  isOpen,
-  children,
-}: {
-  isOpen: boolean;
-  children: React.ReactNode;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState("0px");
-
-  const updateHeight = () => {
-    if (ref.current) {
-      setHeight(`${ref.current.scrollHeight}px`);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => {
-        setTimeout(updateHeight, 100);
-      });
-    } else {
-      setHeight("0px");
-    }
-  }, [isOpen, children]);
-
-  return (
-    <div
-      style={{ maxHeight: height, marginBottom: isOpen ? "2rem" : "0px" }}
-      className="transition-all duration-500 ease-in-out overflow-hidden"
-    >
-      <div ref={ref}>{children}</div>
-    </div>
-  );
-};
 
 export default function VisitorDocuments() {
   const searchParams = useSearchParams();
@@ -102,7 +66,7 @@ export default function VisitorDocuments() {
   const renderFileList = (list: FileObject[]) => (
     <>
       {list.length === 0 ? (
-        <p>Nenhum arquivo encontrado</p>
+        <p className="p-6 text-center">Nenhum arquivo encontrado</p>
       ) : (
         list.map((item, index) => (
           <div
@@ -144,14 +108,20 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isNotasFiscaisOpen} key={JSON.stringify(taxInvoices.map(f => f.id))}>
-          <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFileList(taxInvoices)}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isNotasFiscaisOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFileList(taxInvoices)}
+              </div>
             </div>
           </div>
-        </AccordionSection>
+        </div>
 
         {/* Relatórios */}
         <div
@@ -165,14 +135,20 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isRelatoriosOpen} key={JSON.stringify(reports.map(r => r.id))}>
-          <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFileList(reports)}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isRelatoriosOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFileList(reports)}
+              </div>
             </div>
           </div>
-        </AccordionSection>
+        </div>
 
         {/* Outros documentos */}
         <div
@@ -186,14 +162,20 @@ export default function VisitorDocuments() {
             alt="toggle"
           />
         </div>
-        <AccordionSection isOpen={isOutrosOpen} key={JSON.stringify(others.map(o => o.id))}>
-          <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFileList(others)}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isOutrosOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFileList(others)}
+              </div>
             </div>
           </div>
-        </AccordionSection>
+        </div>
       </div>
     </div>
   );

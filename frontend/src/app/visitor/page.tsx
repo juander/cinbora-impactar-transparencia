@@ -43,18 +43,11 @@ export default function VisitorPage() {
           const [hoveredSlide, setHoveredSlide] = useState<number | null>(null);
           const [lastUpdated, setLastUpdated] = useState<string | null>(null);
           const [ngoName, setNgoName] = useState("");
-          const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-          // Função para atualizar os dados
-          const refreshData = () => {
-            setLoading(true);
-            setRefreshTrigger(prev => prev + 1);
-          };
 
           useEffect(() => {
             if (!ngoId) return;
 
-            fetch(`${API_BASE_URL}/logs/last/${ngoId}?_t=${Date.now()}`)
+            fetch(`${API_BASE_URL}/logs/last/${ngoId}`)
               .then((res) => res.json())
               .then((data) => {
                 const timestamp = data?.timestamp;
@@ -67,11 +60,11 @@ export default function VisitorPage() {
               .catch((err) => {
                 console.error("Erro ao buscar última atualização:", err);
               });
-          }, [ngoId, refreshTrigger]);
+          }, [ngoId]);
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`${API_BASE_URL}/ongs/${ngoId}/actions?_nocache=${Date.now()}`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}/actions`)
                 .then((res) => res.json())
                 .then((data) => {
                   setSlides(data);
@@ -82,16 +75,16 @@ export default function VisitorPage() {
                   setLoading(false);
                 });
             }
-          }, [ngoId, refreshTrigger]);
+          }, [ngoId]);
 
           useEffect(() => {
             if (ngoId) {
-              fetch(`${API_BASE_URL}/ongs/${ngoId}?_t=${Date.now()}`)
+              fetch(`${API_BASE_URL}/ongs/${ngoId}`)
                 .then((res) => res.json())
                 .then((data) => setNgoName(data.ngo.name))
                 .catch((err) => console.error("Erro ao buscar ONG:", err));
             }
-          }, [ngoId, refreshTrigger]);
+          }, [ngoId]);
 
           const filteredSlides = slides.filter((slide) =>
             slide.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,19 +93,13 @@ export default function VisitorPage() {
 
           return (
             <main className="relative flex flex-col items-center min-h-screen py-10">
-              <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20 max-xl:text-3xl max-sm:text-xl">
+              <h1 title={ngoName} className="text-4xl text-center font-bold whitespace-nowrap overflow-hidden text-ellipsis w-[90%] m-auto max-xl:text-3xl max-sm:text-xl mt-20">
                 {ngoName}
               </h1>
 
               {lastUpdated && (
-                <div className="absolute top-6 right-10 text-gray-600 text-lg">
+                <div className="absolute top-6 right-10 text-gray-600 text-lg max-sm:p-2">
                   Dados atualizados pela última vez em: <strong>{lastUpdated}</strong>
-                  <button 
-                    onClick={refreshData}
-                    className="ml-3 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                  >
-                    {loading ? "Atualizando..." : "Atualizar dados"}
-                  </button>
                 </div>
               )}
               <h1 className="text-center text-4xl font-bold text-[#2E4049] mt-20">
@@ -135,7 +122,7 @@ export default function VisitorPage() {
                   {searchTerm && filteredSlides.length === 0 ? (
                     <div className="mt-10 text-red-600">ação não encontrada</div>
                   ) : filteredSlides.length > 0 ? (
-                    <Carousel opts={{ align: "start" }} className="w-[100%] mt-16 p-4">
+                    <Carousel opts={{ align: "start" }} className="w-[100%] mt-16 p-4 max-w-[3000px]">
                       <CarouselContent>
                         {filteredSlides.slice().reverse().map((slide, index) => (
                           <CarouselItem

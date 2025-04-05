@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import download from "../../assets/Documents.svg";
-import { UploadCloud, Trash2 } from "lucide-react";
+import arrowDown from "../../assets/downArrow.svg";
+import { UploadCloud, Trash2, Info } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { API_BASE_URL } from "@/config/api"
@@ -31,6 +32,9 @@ export default function Documents() {
   const [reports, setReports] = useState<FileDocument[]>([]);
   const [uploadCategory, setUploadCategory] = useState("other");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isNotasFiscaisOpen, setIsNotasFiscaisOpen] = useState(false);
+  const [isRelatoriosOpen, setIsRelatoriosOpen] = useState(false);
+  const [isOutrosOpen, setIsOutrosOpen] = useState(false);
 
   const deduplicate = (data: FileDocument[]) => {
     return Array.from(new Map(data.map(item => [item.id, item])).values());
@@ -198,39 +202,88 @@ export default function Documents() {
   return (
     <div className="w-9/12 m-auto mb-20 mt-10 max-[1600px]:w-11/12">
       <div className="flex flex-col">
-
-        <div className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-500 mb-2 flex items-center gap-1 text-center">
+          <Info className="w-4 h-4 text-blue-500" />
+          Máximo de 10MB por arquivo
+        </p>
+  
+        {/* Notas Fiscais */}
+        <div
+          onClick={() => setIsNotasFiscaisOpen(!isNotasFiscaisOpen)}
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Notas Fiscais</p>
+          <Image
+            className={`w-4 mr-12 transition-transform duration-300 ${isNotasFiscaisOpen ? "rotate-180" : ""}`}
+            src={arrowDown}
+            alt="toggle"
+          />
         </div>
-        <div className="mb-8">
-          <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFiles(taxInvoices, "tax invoice")}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isNotasFiscaisOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Notas Fiscais</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFiles(taxInvoices, "tax invoice")}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4">
+        {/* Relatórios */}
+        <div
+          onClick={() => setIsRelatoriosOpen(!isRelatoriosOpen)}
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Relatórios</p>
+          <Image
+            className={`w-4 mr-12 transition-transform duration-300 ${isRelatoriosOpen ? "rotate-180" : ""}`}
+            src={arrowDown}
+            alt="toggle"
+          />
         </div>
-        <div className="mb-8">
-          <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-12 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFiles(reports, "report")}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isRelatoriosOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Relatórios</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-12 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFiles(reports, "report")}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4">
+        {/* Outros documentos */}
+        <div
+          onClick={() => setIsOutrosOpen(!isOutrosOpen)}
+          className="w-full h-20 bg-[#E0E0E0] border border-[#ADADAD] rounded-full flex items-center justify-between mb-4 cursor-pointer"
+        >
           <p className="ml-12">Outros documentos</p>
+          <Image
+            className={`w-4 mr-12 transition-transform duration-300 ${isOutrosOpen ? "rotate-180" : ""}`}
+            src={arrowDown}
+            alt="toggle"
+          />
         </div>
-        <div className="mb-8">
-          <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
-          <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
-            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-              {renderFiles(others, "other")}
+        <div 
+          className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            isOutrosOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="mb-8">
+            <h1 className="text-center font-bold text-2xl mb-2">Outros documentos</h1>
+            <div className="h-full w-full border border-black rounded-[64px] p-10 mb-16 max-[1600px]:border-none max-[1600px]:p-0">
+              <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+                {renderFiles(others, "other")}
+              </div>
             </div>
           </div>
         </div>

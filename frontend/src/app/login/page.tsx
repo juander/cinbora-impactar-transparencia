@@ -197,6 +197,25 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="flex items-center my-8 w-full">
+              <div className="flex-grow border-t border-gray-200" />
+              <span className="mx-4 text-base text-gray-500 whitespace-nowrap">É uma ONG nova?</span>
+              <div className="flex-grow border-t border-gray-200" />
+            </div>
+
+
+
+            <a
+              href="https://conecta.recife.pe.gov.br/acesso"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block text-center w-full border border-blue-500 text-base bg-white text-blue-600 rounded-[24px] py-3 hover:bg-blue-50 transition"
+            >
+              Criar uma conta
+            </a>
+
+
+
           </div>
         </div>
       </div>

@@ -10,8 +10,10 @@ import dateIcon from "../assets/date_icon.svg";
 import phoneIcon from "../assets/phone_icon.svg";
 import shareButton from "../assets/share.svg";
 import Link from "next/link";
+import AnimatedTitle from "@/components/ui/AnimatedTitle";
 import { Button } from "@/components/ui/button";
 import ModalPortal from "@/components/ui/modalPortal";
+import FloatingHearts from "@/components/ui/FloatingHearts";
 import { Search } from "lucide-react";
 import TypedHeader from "@/components/ui/typedHeader";
 
@@ -49,11 +51,11 @@ export default function Ongs() {
 
   return (
     <div>
-      <div className="flex mt-10 justify-between">
+      <div className="flex mt-10 justify-between max-md:hidden">
+        <FloatingHearts/>
         <div className="flex flex-col w-3/5 text-[#294BB6] p-12 max-xl:p-3">
-          <h1 className="font-semibold text-5xl max-lg:text-4xl max-md:text-3xl max-sm:text-xl">
-            Portal da Transparência
-          </h1>
+          <h1 className="font-bold text-5xl max-lg:text-4xl max-md:text-3xl max-sm:text-xs text-[#294BB6]">PORTAL DA TRANSPARÊNCIA</h1>
+
           <TypedHeader />
         </div>
         <div className="flex flex-col">
@@ -68,13 +70,32 @@ export default function Ongs() {
             alt="foto de criança"
           />
         </div>
+
       </div>
 
-      <div className="text-center mb-12 mt-32">
-        <span className="inline-block px-4 py-2 bg-[#009FE350] text-[#294BB6] text-lg font-semibold rounded-full">
+      <div className="hidden max-md:block">
+        <FloatingHearts/>
+        <div className="flex flex-col items-center justify-center mt-10 mb-4">
+          <h1 className="font-bold text-2xl mb-20 text-[#294BB6] max-sm:text-xl">PORTAL DA TRANSPARÊNCIA</h1>
+          <Image
+            className="w-[30%] mb-4"
+            src={boraImpactar}
+            alt="logo do projeto bora impactar"
+          />
+          <Image
+            className="w-[75%] border-4 border-dashed rounded-[30px] border-[#007AFF]"
+            src={fotoInicial}
+            alt="foto de criança"
+          />
+          <TypedHeader />
+        </div>
+      </div>
+
+      <div className="text-center mb-12 mt-16">
+        <span id="searchOngs" className="inline-block px-4 py-2 bg-[#009FE350] text-[#294BB6] text-lg font-semibold rounded-full">
           ONGs em Destaque
         </span>
-        <p className="mt-4 text-gray-700 text-lg">Selecione uma ONG abaixo para conhecer seu trabalho.</p>
+        <p className="mt-4 text-gray-700 text-lg px-4">Selecione uma ONG abaixo para conhecer seu trabalho.</p>
       </div>
 
       <div className="relative w-full max-w-2xl mx-auto mb-20 px-4">
@@ -84,7 +105,7 @@ export default function Ongs() {
           className="w-full py-3 pl-10 pr-28 rounded-full text-gray-700 placeholder-gray-400 bg-gradient-to-r from-white via-white to-[#E0F2FF] shadow-md focus:outline-none text-sm sm:text-base"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+        <Search id="searchOngs2" className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
         <div className="absolute right-[25px] top-0 bottom-0 w-20 sm:w-24 rounded-r-full overflow-hidden">
           <Image
             src={boraImpactar}
@@ -106,11 +127,12 @@ export default function Ongs() {
             )
             .map((ong) => (
               <div
+                id="searchOngs3" 
                 key={ong.id}
                 className="w-96 flex flex-col p-6 bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:scale-[1.01] transition-all duration-300 max-sm:w-80 relative"
               >
                 <h1 title={ong.name} className="font-extrabold text-xl text-[#2E4049] mb-3 line-clamp-5 overflow-hidden">{ong.name}</h1>
-                <div className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis rexlative">
+                <div className="mb-4 text-sm text-gray-700 h-32 overflow-hidden text-ellipsis relative">
                   {ong.description.length > 180 ? (
                     <>
                       {ong.description.slice(0, 180)}...
@@ -174,17 +196,17 @@ export default function Ongs() {
       {selectedOng && (
         <ModalPortal>
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 w-[90%] max-w-xl relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-[90%] max-w-xl relative max-h-[90vh] overflow-auto">
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl"
               >
                 ×
               </button>
-              <h2 className="text-2xl font-bold text-[#294BB6] mb-4">
+              <h2 className="text-2xl font-bold text-[#294BB6] mb-4 break-words">
                 {selectedOng.name}
               </h2>
-              <p className="text-gray-700 mb-4 whitespace-pre-wrap">
+              <p className="text-gray-700 mb-4 whitespace-pre-wrap break-words">
                 {selectedOng.description}
               </p>
               <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
@@ -192,11 +214,11 @@ export default function Ongs() {
                   <Image src={dateIcon} alt="Data de início" />
                   Ano de fundação: {selectedOng.start_year || "N/A"}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 break-all">
                   <Image src={phoneIcon} alt="Contato" />
                   Contato: {selectedOng.contact_phone || "N/A"}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 break-all">
                   <Image src={instagramIcon} alt="Instagram" />
                   Instagram:{" "}
                   {selectedOng.instagram_link ? (

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { UploadCloud, Camera, Video, Trash2, Loader2 } from "lucide-react";
+import { UploadCloud, Camera, Video, Trash2, Loader2, ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Pause, Play, Info } from "lucide-react";
 import Image from "next/image";
 import { API_BASE_URL } from "@/config/api"
 import {
@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import ModalPortal from "./modalPortal";
 
 // Interface para representar os arquivos de mídia
 interface MediaFile {
@@ -40,8 +41,102 @@ export default function Gallery() {
   const [uploadType, setUploadType] = useState<"image" | "video" | null>(null);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+  const [progress, setProgress] = useState<number>(0);
+  const focusedIndexRef = useRef(focusedIndex);
+  const [zoom, setZoom] = useState(1); // Zoom inicial
+  const [isPaused, setIsPaused] = useState(false); // Controle do autoplay
   const searchParams = useSearchParams();
   const actionId = searchParams.get("action_id");
+
+  useEffect(() => {
+    setZoom(1); // reseta o zoom sempre que a imagem muda
+  }, [focusedIndex]);
+
+  useEffect(() => {
+    if (expandedImage) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [expandedImage]);
+
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      if (!expandedImage) return;
+      e.preventDefault();
+      setZoom((prev) => {
+        const newZoom = prev + (e.deltaY < 0 ? 0.1 : -0.1);
+        return Math.min(Math.max(newZoom, 0.5), 2);
+      });
+    };
+  
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!expandedImage) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsPaused((prev) => !prev);
+      }
+    };
+  
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [expandedImage]);
+
+  useEffect(() => {
+    if (!expandedImage) return;
+  
+    let initialZoom = zoom;
+  
+    const handleGestureStart = (e: any) => {
+      e.preventDefault();
+      initialZoom = zoom;
+    };
+  
+    const handleGestureChange = (e: any) => {
+      e.preventDefault();
+      const newZoom = initialZoom * e.scale;
+      setZoom(Math.min(Math.max(newZoom, 0.5), 2));
+    };
+  
+    window.addEventListener("gesturestart", handleGestureStart);
+    window.addEventListener("gesturechange", handleGestureChange);
+  
+    return () => {
+      window.removeEventListener("gesturestart", handleGestureStart);
+      window.removeEventListener("gesturechange", handleGestureChange);
+    };
+  }, [expandedImage, zoom]);
+  
+  useEffect(() => {
+    focusedIndexRef.current = focusedIndex;
+  }, [focusedIndex]);
+
+  useEffect(() => {
+    if (expandedImage === null || imageFiles.length < 2 || isPaused) return;
+  
+    const interval = setInterval(() => {
+      setProgress((prevProgress) => {
+        const nextProgress = prevProgress + 2;
+        if (nextProgress > 100) {
+          const nextIndex = (focusedIndexRef.current + 1) % imageFiles.length;
+          setFocusedIndex(nextIndex);
+          return 0;
+        }
+        return nextProgress;
+      });
+    }, 100);
+  
+    return () => clearInterval(interval);
+  }, [expandedImage, imageFiles.length, isPaused]);
 
   useEffect(() => {
     const authToken = Cookies.get("auth_token");
@@ -180,8 +275,10 @@ export default function Gallery() {
     }
   };
 
-  const handleExpandImage = (img: string) => {
+  const handleExpandImage = (img: string, index: number) => {
+    setFocusedIndex(index);
     setExpandedImage(img);
+    setProgress(0);
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -239,6 +336,10 @@ export default function Gallery() {
           <Camera className="text-blue-600 mr-2" size={28} />
           Imagens
         </h2>
+        <p className="text-sm text-gray-500 mb-2 flex items-center gap-1 text-center">
+          <Info className="w-4 h-4 text-blue-500" />
+          Máximo de 10MB por arquivo
+        </p>
         <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
           <label className="border-2 border-dashed border-gray-300 w-full h-64 flex flex-col justify-center items-center cursor-pointer rounded-[16px] hover:shadow-lg transition">
             <UploadCloud className="text-blue-600 mb-2" size={32} />
@@ -251,7 +352,7 @@ export default function Gallery() {
                 src={imgFile.aws_url}
                 alt={`Imagem ${index}`}
                 className="w-full h-64 object-cover rounded-[16px] shadow-md cursor-pointer hover:shadow-lg transition"
-                onClick={() => handleExpandImage(imgFile.aws_url)}
+                onClick={() => handleExpandImage(imgFile.aws_url, index)}
               />
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -293,6 +394,10 @@ export default function Gallery() {
           <Video className="text-blue-600 mr-2" size={28} />
           Vídeos
         </h2>
+        <p className="text-sm text-gray-500 mb-2 flex items-center gap-1 text-center">
+          <Info className="w-4 h-4 text-blue-500" />
+          Máximo de 10MB por arquivo
+        </p>
         <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1 mb-20">
           <label className="border-2 border-dashed border-gray-300 w-full h-64 flex flex-col justify-center items-center cursor-pointer rounded-[16px] hover:shadow-lg transition">
             <UploadCloud className="text-blue-600 mb-2" size={32} />
@@ -343,40 +448,226 @@ export default function Gallery() {
           ))}
         </div>
       </div>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="bg-white rounded-[16px] shadow-xl p-6 overflow-y-scroll h-full">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Pré-visualização</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            {previewType === "image" && preview && (
-              <Image src={preview} alt="Preview" width={600} height={400} className="rounded-[16px] shadow-md" />
-            )}
-            {previewType === "video" && preview && (
-              <video src={preview} className="w-full rounded-[16px]" controls />
-            )}
-            <Button 
-              className="rounded-[16px]" 
-              onClick={handleUpload} 
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                "Confirmar Upload"
-              )}
-            </Button>
+      
+      {isDialogOpen && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in px-4">
+            <div className="relative w-full max-w-2xl bg-white rounded-[24px] shadow-xl border border-gray-200 p-8 sm:p-10 max-h-[90vh] overflow-y-auto font-sans">
+              
+              {/* Botão de fechar */}
+              <button
+                onClick={() => setIsDialogOpen(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-3xl"
+                aria-label="Fechar modal"
+              >
+                ×
+              </button>
+
+              {/* Título */}
+              <h2 className="text-2xl font-semibold text-center text-blue-900 mb-6">
+                Pré-visualização do Arquivo
+              </h2>
+
+              {/* Conteúdo */}
+              <div className="flex flex-col gap-6 items-center">
+                {previewType === "image" && preview && (
+                  <Image
+                    src={preview}
+                    alt="Preview da imagem"
+                    width={600}
+                    height={400}
+                    className="rounded-[16px] shadow-md object-contain max-w-full h-auto border border-gray-200"
+                  />
+                )}
+
+                {previewType === "video" && preview && (
+                  <video
+                    src={preview}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full rounded-[16px] shadow-md border border-gray-200"
+                    onLoadedMetadata={(e) => {
+                      const video = e.currentTarget;
+                      video.muted = false;
+                      video.volume = 1;
+                    }}
+                  />
+                )}
+
+                <button
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg py-3 px-8 rounded-[24px] transition disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Enviando...
+                    </span>
+                  ) : (
+                    "Confirmar Upload"
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={expandedImage !== null} onOpenChange={() => setExpandedImage(null)}>
-        <DialogContent className="bg-white rounded-[16px] shadow-xl p-6">
-          {expandedImage && <img src={expandedImage} alt="Imagem Expandida" className="w-full h-auto rounded-[16px]" />}
-        </DialogContent>
-      </Dialog>
+        </ModalPortal>
+      )}
+
+      {/* Modal de visualização avançada */}
+      {expandedImage && (
+        <ModalPortal>
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/95">
+            {/* Fundo clicável para fechar */}
+            <div className="absolute inset-0 z-10" onClick={() => setExpandedImage(null)} />
+
+            {/* Botão de fechar */}
+            <button
+              className="absolute top-4 right-4 z-30 text-white bg-white/10 hover:bg-white/20 p-2 rounded-full"
+              onClick={() => setExpandedImage(null)}
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="absolute top-4 left-4 z-50 flex flex-wrap gap-2 sm:gap-3 sm:flex-row flex-col sm:flex-nowrap">
+              <button
+                className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoom((prev) => Math.min(prev + 0.1, 2));
+                }}
+              >
+                <ZoomIn className="w-5 h-5" />
+              </button>
+              <button
+                className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoom((prev) => Math.max(prev - 0.1, 0.5));
+                }}
+              >
+                <ZoomOut className="w-5 h-5" />
+              </button>
+              <button
+                className="bg-white/10 hover:bg-white/20 text-white p-3 rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPaused((prev) => !prev);
+                }}
+              >
+                {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <button
+              className="hidden sm:flex absolute left-6 top-1/2 -translate-y-1/2 z-30 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFocusedIndex((prev) => (prev - 1 + imageFiles.length) % imageFiles.length);
+                setProgress(0);
+              }}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            <button
+              className="hidden sm:flex absolute right-6 top-1/2 -translate-y-1/2 z-30 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFocusedIndex((prev) => (prev + 1) % imageFiles.length);
+                setProgress(0);
+              }}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            <div className="flex sm:hidden fixed bottom-36 left-0 right-0 justify-center gap-10 z-50 pointer-events-none">
+              <button
+                className="text-white bg-white/10 hover:bg-white/20 p-3 rounded-full pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFocusedIndex((prev) => (prev - 1 + imageFiles.length) % imageFiles.length);
+                  setProgress(0);
+                }}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                className="text-white bg-white/10 hover:bg-white/20 p-3 rounded-full pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFocusedIndex((prev) => (prev + 1) % imageFiles.length);
+                  setProgress(0);
+                }}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Carrossel */}
+            <div className="relative z-20 flex items-center justify-center w-full h-full px-4 overflow-hidden">
+              {imageFiles.map((img, index) => {
+                const total = imageFiles.length;
+                const isCenter = index === focusedIndex;
+
+                let distance = index - focusedIndex;
+                if (distance > total / 2) distance -= total;
+                if (distance < -total / 2) distance += total;
+
+                if (distance < -1 || distance > 1) return null;
+
+                const translateX = distance * 320;
+                const scale = distance === 0 ? 1.2 : 0.85;
+                const zIndex = 100 - Math.abs(distance);
+                const opacity = distance === 0 ? 1 : 0.7;
+
+                return (
+                  <div
+                    key={img.id}
+                    onClick={() => {
+                      setFocusedIndex(index);
+                      setProgress(0);
+                    }}
+                    className="absolute transition-all duration-700 ease-in-out cursor-pointer flex flex-col items-center"
+                    style={{
+                      transform: `translateX(${translateX}px) scale(${scale})`,
+                      opacity,
+                      zIndex,
+                    }}
+                  >
+                    <div className="relative w-[90vw] sm:px-0 px-8 max-w-[420px] h-auto max-h-[85vh] flex items-center justify-center mx-auto">
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        {isCenter && (
+                          <div className="absolute z-0 w-full h-full flex items-center justify-center">
+                            <div
+                              className="absolute z-0 transition-transform duration-300"
+                              style={{
+                                borderRadius: '24px',
+                                background: `conic-gradient(from -90deg, #1f51ff ${progress}%, transparent ${progress}%)`,
+                                transform: isCenter ? `scale(${zoom})` : "scale(1)",
+                                zIndex: 1,
+                              }}
+                            />
+                          </div>
+                        )}
+                        <img
+                          src={img.aws_url}
+                          className="relative z-10 w-auto max-w-full max-h-[80vh] object-contain rounded-[20px] transition-transform duration-300"
+                          style={{
+                            transform: isCenter ? `scale(${zoom})` : "scale(1)",
+                          }}
+                          alt={`Imagem ${index}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </ModalPortal>
+      )}
     </div>
   );
 }

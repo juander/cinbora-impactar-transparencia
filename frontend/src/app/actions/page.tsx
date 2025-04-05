@@ -1,10 +1,9 @@
 "use client"
 
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { SearchParamsWrapper } from '@/components/ui/search-params-wrapper'
 import { useEffect, useState } from "react"
 import { CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress";
 import { API_BASE_URL } from "@/config/api"
 import ActionsGallery from "@/components/ui/actionsGallery"
 import ActionsDocuments from "@/components/ui/actionsDocuments"

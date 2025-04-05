@@ -40,7 +40,7 @@ export default function TypedHeader() {
   }, [charIndex, isDeleting, phraseIndex]);
 
   return (
-    <h2 className="font-semibold text-3xl mt-64 max-w-96 whitespace-pre-wrap text-[#294BB6] max-lg:text-2xl max-md:text-xl max-sm:text-sm">
+    <h2 className="font-semibold text-3xl mt-56 max-w-96 min-h-32 whitespace-pre-wrap text-[#294BB6] max-lg:text-2xl max-md:text-xl max-sm:text-sm max-md:mt-16">
       {displayedText}
       <span className="inline-block w-[1px] bg-[#294BB6] animate-blink ml-[2px] h-[1.5em] align-middle"></span>
     </h2>

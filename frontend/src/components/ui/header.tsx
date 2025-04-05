@@ -90,10 +90,17 @@ export default function Header() {
       </div>
       <Menubar className="border-none shadow-none text-white justify-between max-lg:hidden">
         <MenubarMenu>
-          <Link href="/">
+          <Link href="/#">
             <MenubarTrigger className="px-20 text-xl font-semibold text-white relative group">
               <span className="relative cursor-pointer inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
                 Início
+              </span>
+            </MenubarTrigger>
+          </Link>
+          <Link href="/#searchOngs">
+            <MenubarTrigger className="px-20 text-xl font-semibold text-white relative group">
+              <span className="relative cursor-pointer inline-block after:absolute after:left-0 after:-bottom-1 after:h-[2px] after:w-0 after:bg-white after:transition-all after:duration-300 group-hover:after:w-full">
+                Ongs
               </span>
             </MenubarTrigger>
           </Link>
@@ -113,8 +120,11 @@ export default function Header() {
               <div id="mobile">☰</div>
             </DropdownMenuTrigger>
             <DropdownMenuContent id="start" className="bg-white rounded-xl border-solid border-2 mr-4 mt-2 border-white hidden max-lg:block">
-              <Link href="/">
-                <DropdownMenuItem id="partners" className="block text-center text-8 font-semibold text-[#294BB6] hover:scale-110">Início</DropdownMenuItem>
+              <Link href="/#">
+                <DropdownMenuItem className="block text-center text-8 font-semibold text-[#294BB6] hover:scale-110">Início</DropdownMenuItem>
+              </Link>
+              <Link href="/#searchOngs" target="_blank">
+                <DropdownMenuItem className="block text-center text-8 font-semibold text-[#294BB6] hover:scale-110">Ongs</DropdownMenuItem>
               </Link>
               <DropdownMenuItem className="px-4 py-2 hover:bg-gray-200">
                 <Link href="/login">

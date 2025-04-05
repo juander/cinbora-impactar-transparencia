@@ -35,6 +35,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import InfoTooltipModal from "@/components/ui/HelpTooltip";
 
 
 type EditingSlideType = {
@@ -194,6 +195,9 @@ export default function ActionsPage() {
       await fetchActions();
     }
   
+    // Always reset the selectedCategory when opening modal
+    setSelectedCategory(null);
+    
     if (slide?.id) {
       setEditingSlide({
         id: slide.id,
@@ -356,47 +360,65 @@ export default function ActionsPage() {
     }
   };
   
-const fetchActionDetails = async (actionId: string): Promise<void> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`);
-    if (!response.ok) throw new Error("Erro ao buscar detalhes da ação.");
-
-    const data = await response.json();
-
-    // Objeto para armazenar a soma total de cada categoria
-    let aggregatedExpenses: Record<string, number> = {};
-
-    // Percorre todos os registros diários e soma os valores de cada categoria
-    data?.actionGrafic?.[0]?.categorysExpenses?.forEach((year: any) => {
-      year.months.forEach((month: any) => {
-        month.dailyRecords.forEach((record: any) => {
-          Object.entries(record.categorysExpenses).forEach(([category, value]) => {
-            aggregatedExpenses[category] = (aggregatedExpenses[category] || 0) + (typeof value === 'number' ? value : 0);
+  const fetchActionDetails = async (actionId: string): Promise<void> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ongs/actions/${actionId}`);
+      if (!response.ok) throw new Error("Erro ao buscar detalhes da ação.");
+  
+      const data = await response.json();
+  
+      let monthlyTotal: Record<string, number[]> = {};
+  
+      data?.actionGrafic?.[0]?.categorysExpenses?.forEach((year: any) => {
+        year.months.forEach((month: any) => {
+          const monthIndex = month.month - 1;
+  
+          month.dailyRecords.forEach((record: any) => {
+            Object.entries(record.categorysExpenses).forEach(([category, value]) => {
+              if (!monthlyTotal[category]) {
+                monthlyTotal[category] = Array(12).fill(null);
+              }
+              monthlyTotal[category][monthIndex] =
+                (monthlyTotal[category][monthIndex] || 0) + Number(value);
+            });
           });
         });
       });
-    });
-
-    setOriginalCategorysExpenses(aggregatedExpenses);
-    
-    const awsUrl = data.action.aws_url || "";
-    
-    setEditingSlide((prev) => ({
-      ...prev,
-      ...data.action,
-      aws_url: awsUrl,
-      categorysExpenses: aggregatedExpenses,
-      spent: calculateSpent(aggregatedExpenses),
-    }));
-    
-
-
-    setImagePreview(awsUrl ?? null);
-  } catch (error) {
-    console.error("Erro ao carregar detalhes da ação:", error);
-    toast.error("Erro ao carregar detalhes da ação.");
-  }
-};
+  
+      let aggregatedExpenses: Record<string, number> = {};
+      Object.entries(monthlyTotal).forEach(([category, months]) => {
+        let last = 0;
+        aggregatedExpenses[category] = 0;
+  
+        months.forEach((val) => {
+          if (val !== null && val !== undefined) {
+            aggregatedExpenses[category] += val - last;
+            last = val;
+          }
+        });
+      });
+  
+  
+      setOriginalCategorysExpenses(aggregatedExpenses);
+      
+      const awsUrl = data.action.aws_url || "";
+      
+      setEditingSlide((prev) => ({
+        ...prev,
+        ...data.action,
+        aws_url: awsUrl,
+        categorysExpenses: aggregatedExpenses,
+        spent: calculateSpent(aggregatedExpenses),
+      }));
+      
+  
+  
+      setImagePreview(awsUrl ?? null);
+    } catch (error) {
+      console.error("Erro ao carregar detalhes da ação:", error);
+      toast.error("Erro ao carregar detalhes da ação.");
+    }
+  };
   
   
   const validateAndFixCategories = () => {
@@ -439,23 +461,33 @@ const updateSlideImage = async (slideId: string): Promise<void> => {
       return;
     }
 
-    const updatedImage = await response.json();
+    // After successful PUT, fetch the updated action to get the new image
+    const getResponse = await fetch(`${API_BASE_URL}/ongs/actions/${slideId}`, {
+      headers: { 
+        Authorization: `Bearer ${token}` 
+      }
+    });
+    
+    if (!getResponse.ok) {
+      console.log("Erro ao recuperar a ação atualizada:", getResponse.statusText);
+      return;
+    }
+    
+    const updatedAction = await getResponse.json();
+    const timestamp = Date.now();
+    const imageUrlWithTimestamp = `${updatedAction.action.aws_url}?t=${timestamp}`;
 
     setImageUrls((prevUrls) => ({
       ...prevUrls,
-      [slideId]: updatedImage.aws_url,
-    }));
-
-    setEditingSlide((prev) => ({
-      ...prev,
-      aws_url: updatedImage.aws_url,
+      [slideId]: imageUrlWithTimestamp,
     }));
     
-    await fetchActions(true);
+   
   } catch (error) {
     console.log("Erro ao atualizar a imagem:", error);
+    toast.error("Erro ao atualizar a imagem. Tente novamente.");
   }
-};
+}
 
 const showCategoryChangeNotification = () => {
   if (!categoryNotificationShown) {
@@ -551,7 +583,7 @@ const handleSave = async () => {
     
 
     if (isUpdate && slideId && imageFile) {
-      await updateSlideImage(slideId);
+      updateSlideImage(slideId);
     }
 
     toast.success("Ação salva com sucesso!");
@@ -597,9 +629,9 @@ const handleSave = async () => {
         <HelpCircle className="w-6 h-6" />
       </button>
 
-      <h1 className="text-center text-5xl font-bold text-[#2E4049] mt-20 max-xl:text-3xl max-sm:text-2xl">{ngoName}</h1>
+      <h1 title={ngoName} className="text-4xl text-center font-bold whitespace-nowrap overflow-hidden text-ellipsis w-[90%] m-auto max-xl:text-3xl max-sm:text-xl mt-20">{ngoName}</h1>
       {lastUpdated && (
-        <div className="absolute top-6 right-10 text-gray-600 text-lg">
+        <div className="absolute top-6 right-10 text-gray-600 text-lg max-sm:p-2">
           Dados atualizados pela última vez em: <strong>{lastUpdated}</strong>
         </div>
       )}
@@ -630,7 +662,7 @@ const handleSave = async () => {
         }
  
         return (
-          <Carousel opts={{ align: "start" }} className="w-[100%] mt-16 p-4">
+          <Carousel opts={{ align: "start" }} className="w-[100%] mt-16 p-4 max-w-[3000px]">
             <CarouselContent>
               {(displaySlides.reverse()).map((slide, index) => (
                 <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4 w-full border-none border-t shadow-none">
@@ -647,7 +679,7 @@ const handleSave = async () => {
                         {/* Container da Imagem */}
                         <div className="relative w-full h-[180px] overflow-hidden rounded-t-[16px]">
                           <Image
-                            src={imageUrls[slide.id || ''] || capa.src}
+                            src={(imageUrls[slide.id || ''] && `${imageUrls[slide.id || '']}${imageUrls[slide.id || ''].includes('?') ? '&' : '?'}refresh=${Date.now()}`) || capa.src}
                             alt="Imagem da ação"
                             layout="fill"
                             objectFit="cover"
@@ -831,10 +863,94 @@ const handleSave = async () => {
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in z-50">
             <div className="bg-white border border-gray-200 rounded-3xl shadow-xl p-8 w-[500px] max-h-[85vh] overflow-y-auto">
-              <h2 className="text-2xl font-semibold text-gray-900">
-                {editingSlide?.id ? "Editar Ação" : "Nova Ação"}
-              </h2>
-              <p className="text-gray-500 text-sm mb-4">Preencha os detalhes da ação</p>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    {editingSlide?.id ? "Editar Ação" : "Nova Ação"}
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-4">Preencha os detalhes da ação</p>
+                </div>
+
+                {modalTab === "detalhes" && (
+                  <InfoTooltipModal>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700 text-[15px]">
+                    {/* 1. Título */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#F4F7FF] transition-all border">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-blue-600 font-bold text-xl">1</span>
+                        <h3 className="font-semibold text-[#2E4049]">Título</h3>
+                      </div>
+                      <p>Nome claro da ação. Ex: <strong>Campanha do Agasalho</strong>, <strong>Mutirão de Limpeza</strong>.</p>
+                    </div>
+
+                    {/* 2. Tipo */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#F5FFF6] transition-all border">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-green-600 font-bold text-xl">2</span>
+                        <h3 className="font-semibold text-[#2E4049]">Tipo</h3>
+                      </div>
+                      <p>Categoria geral da ação. Ex: <strong>Alimento</strong>, <strong>Educação</strong>, <strong>Vacinação</strong>.</p>
+                    </div>
+
+                    {/* 3. Meta */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#FFF5F7] transition-all border">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-pink-600 font-bold text-xl">3</span>
+                        <h3 className="font-semibold text-[#2E4049]">Meta (R$)</h3>
+                      </div>
+                      <p>Valor total esperado para arrecadação da ação.</p>
+                    </div>
+
+                    {/* 4. Arrecadado */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#FFFCEB] transition-all border">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-yellow-600 font-bold text-xl">4</span>
+                        <h3 className="font-semibold text-[#2E4049]">Arrecadado (R$)</h3>
+                      </div>
+                      <p>Valor arrecadado até o momento. Atualize conforme for recebendo novos recursos.</p>
+                    </div>
+
+                    {/* 5. Categorias de Despesas */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#E9F6FF] transition-all border col-span-1 sm:col-span-2">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-sky-600 font-bold text-xl">5</span>
+                        <h3 className="font-semibold text-[#2E4049]">Categorias de Despesas</h3>
+                      </div>
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Classificações para os gastos: <strong>Transporte</strong>, <strong>Alimentação</strong>, <strong>Material</strong>.</li>
+                        <li>Você pode adicionar categorias novas a qualquer momento.</li>
+                        <li><strong>Atenção:</strong> Excluir uma categoria remove todos os registros vinculados a ela.</li>
+                        <li>Todos os valores por categoria são somados automaticamente e refletem no total de gastos e nos gráficos mensais.</li>
+                      </ul>
+                    </div>
+
+                    {/* 6. Imagem */}
+                    <div className="group p-4 rounded-2xl hover:bg-[#F9F5FF] transition-all border col-span-1 sm:col-span-2">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="text-purple-600 font-bold text-xl">6</span>
+                        <h3 className="font-semibold text-[#2E4049]">Imagem da Ação</h3>
+                      </div>
+                      <ul className="list-disc pl-5 mt-2 space-y-1">
+                        <li>Escolha uma imagem que represente bem a ação.</li>
+                        <li>Formatos aceitos: <strong>.jpg</strong>, <strong>.png</strong>, <strong>.jpeg</strong>.</li>
+                        <li>Obrigatória na criação da ação, mas pode ser trocada depois.</li>
+                      </ul>
+                    </div>
+
+                    {/* OBS final */}
+                    <div className="col-span-1 sm:col-span-2 text-gray-600 text-sm mt-2 px-2">
+                      <strong>OBS:</strong> Use <code className="bg-gray-100 px-1 py-0.5 rounded">.</code> (ponto) para separar centavos. Ex: <strong>5000.50</strong>
+                    </div>
+                  </div>
+                </InfoTooltipModal>
+
+                )}
+
+
+
+
+              </div>
+
 
               <div className="flex pb-2">
                 <button
