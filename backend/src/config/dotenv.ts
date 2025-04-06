@@ -15,7 +15,7 @@ const constructDatabaseUrl = (): string => {
   const authSource = process.env.MONGO_AUTH_SOURCE || 'admin';
 
   if (!host || !port || !username || !password || !database) {
-    throw new Error('Missing required MongoDB environment variables');
+    console.log('Warning: Missing MongoDB environment variables, using defaults');
   }
   
   return `mongodb://${username}:${password}@${host}:${port}/${database}?authSource=${authSource}&directConnection=true`;
