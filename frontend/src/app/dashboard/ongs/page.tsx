@@ -291,6 +291,15 @@ export default function ActionsPage() {
         toast.success("Ação deletada com sucesso!");
         setSlides((prev) => prev.filter((s) => !('isAddCard' in s) && s.id !== actionId));
         setActionToDelete(null);
+        
+        // Force a complete refresh of all actions data
+        await fetchActions(true);
+        
+        // If currently on balance tab, trigger a refresh of the balance component
+        if (activeTab === "balance") {
+          const event = new CustomEvent('refreshBalance', { detail: { timestamp: Date.now() } });
+          window.dispatchEvent(event);
+        }
       } catch (error) {
         console.error(error);
         toast.error("Erro ao deletar a ação.");
@@ -367,59 +376,58 @@ export default function ActionsPage() {
   
       const data = await response.json();
   
-      let monthlyTotal: Record<string, number[]> = {};
-  
-      data?.actionGrafic?.[0]?.categorysExpenses?.forEach((year: any) => {
-        year.months.forEach((month: any) => {
-          const monthIndex = month.month - 1;
-  
-          month.dailyRecords.forEach((record: any) => {
-            Object.entries(record.categorysExpenses).forEach(([category, value]) => {
-              if (!monthlyTotal[category]) {
-                monthlyTotal[category] = Array(12).fill(null);
-              }
-              monthlyTotal[category][monthIndex] =
-                (monthlyTotal[category][monthIndex] || 0) + Number(value);
+      // Initialize direct category totals instead of tracking by month
+      let categoryTotals: Record<string, number> = {};
+      
+      // Use the action's categorysExpenses directly if available - this is the source of truth
+      if (data.action?.categorysExpenses) {
+        categoryTotals = { ...data.action.categorysExpenses };
+      } 
+      // Only fall back to calculating from actionGrafic if necessary
+      else if (data?.actionGrafic?.[0]?.categorysExpenses) {
+        // Instead of summing all records, create a map of the latest value for each category
+        const categoryLatestValues: Record<string, number> = {};
+        
+        // Get most recent data
+        const mostRecentData = data.actionGrafic[0];
+        
+        // Find the latest values across all time periods without adding them together
+        mostRecentData.categorysExpenses.forEach((year: any) => {
+          year.months.forEach((month: any) => {
+            month.dailyRecords.forEach((record: any) => {
+              // For each category in this record, update its latest value (overwrite, don't add)
+              Object.entries(record.categorysExpenses).forEach(([category, value]) => {
+                categoryLatestValues[category] = Number(value);
+              });
             });
           });
         });
-      });
+        
+        // Use the latest values
+        categoryTotals = categoryLatestValues;
+      }
   
-      let aggregatedExpenses: Record<string, number> = {};
-      Object.entries(monthlyTotal).forEach(([category, months]) => {
-        let last = 0;
-        aggregatedExpenses[category] = 0;
-  
-        months.forEach((val) => {
-          if (val !== null && val !== undefined) {
-            aggregatedExpenses[category] += val - last;
-            last = val;
-          }
-        });
-      });
-  
-  
-      setOriginalCategorysExpenses(aggregatedExpenses);
+      setOriginalCategorysExpenses(categoryTotals);
       
       const awsUrl = data.action.aws_url || "";
+      
+      // Use the correct spent value from the action data
+      const spentValue = data.action.spent || calculateSpent(categoryTotals);
       
       setEditingSlide((prev) => ({
         ...prev,
         ...data.action,
         aws_url: awsUrl,
-        categorysExpenses: aggregatedExpenses,
-        spent: calculateSpent(aggregatedExpenses),
+        categorysExpenses: categoryTotals,
+        spent: spentValue,
       }));
       
-  
-  
       setImagePreview(awsUrl ?? null);
     } catch (error) {
       console.error("Erro ao carregar detalhes da ação:", error);
       toast.error("Erro ao carregar detalhes da ação.");
     }
   };
-  
   
   const validateAndFixCategories = () => {
     let updatedCategories = { ...editingSlide.categorysExpenses };

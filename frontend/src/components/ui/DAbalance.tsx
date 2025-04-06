@@ -79,7 +79,6 @@ export default function Balance({ refreshTrigger = 0 }: BalanceProps) {
   const [data, setData] = useState<Array<{[key: string]: any}>>([])
   const [visibleLines, setVisibleLines] = useState<{ [key: string]: boolean }>({})
   const [actionColors, setActionColors] = useState<{ [key: string]: string }>({})
-  const [totalExpenses, setTotalExpenses] = useState<number>(0)
   const [refreshKey, setRefreshKey] = useState<number>(0)
 
   useEffect(() => {
@@ -103,7 +102,6 @@ export default function Balance({ refreshTrigger = 0 }: BalanceProps) {
         if (!response?.actionGrafic?.[0]?.categorysExpenses?.length) return;
         
         const { categorysExpenses } = response.actionGrafic[0];
-        setTotalExpenses(response.actionGrafic[0]?.totalExpenses || 0);
         
         const allYears = new Set<string>();
         categorysExpenses.forEach((y) => allYears.add(y.year.toString()));
@@ -288,15 +286,6 @@ export default function Balance({ refreshTrigger = 0 }: BalanceProps) {
                 </div>
               </div>
             </InfoTooltipModal>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center mb-16">
-          <div className="text-left">
-            <p className="text-gray-500 text-xl mb-2">Total gasto nesta ação</p>
-            <p className="text-4xl font-bold text-gray-800">
-              {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </p>
           </div>
         </div>
 

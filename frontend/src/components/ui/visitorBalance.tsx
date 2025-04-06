@@ -81,7 +81,7 @@ export default function Balance() {
     const ngoId = searchParams.get("ngo_id");
     if (!ngoId) return;
   
-    fetch(`${API_BASE_URL}/ongs/${ngoId}`)
+    fetch(`${API_BASE_URL}/ongs/${ngoId}?nocache=${Date.now()}`)
       .then((res) => res.json())
       .then((response: NgoData) => {
         setApiData(response);
@@ -104,7 +104,7 @@ export default function Balance() {
         }
       })
       .catch(error => console.error("Error fetching NGO data:", error));
-  }, [searchParams]); // Removido selectedYear das dependências
+  }, [searchParams]); 
 
   // Segundo useEffect - processa os dados quando o ano é selecionado
   useEffect(() => {
@@ -113,74 +113,137 @@ export default function Balance() {
     const { ngoGrafic } = apiData;
     if (!ngoGrafic?.expensesByAction?.length) return;
     
-    // Encontrar o último registro de cada ação para determinar as ações a exibir
-    const lastYearData = ngoGrafic.expensesByAction.reduce((acc, curr) =>
-      curr.year > acc.year ? curr : acc
+    const selectedYearNumber = Number(selectedYear);
+    const currentYearData = ngoGrafic.expensesByAction.find(
+      (y) => y.year === selectedYearNumber
+    );
+    const previousYearData = ngoGrafic.expensesByAction.find(
+      (y) => y.year === selectedYearNumber - 1
     );
     
-    const lastMonthData = lastYearData.months.reduce((acc, curr) =>
-      curr.month > acc.month ? curr : acc
-    );
+    if (!currentYearData) {
+      setData([]);
+      return;
+    }
     
-    const lastDayRecord = lastMonthData.dailyRecords.reduce((acc, curr) =>
-      curr.day > acc.day ? curr : acc
-    );
+    const lastValuesFromPreviousYear: { [action: string]: number } = {};
+    if (previousYearData?.months?.length) {
+      const lastMonth = previousYearData.months.reduce((a, b) =>
+        a.month > b.month ? a : b
+      );
+      
+      if (lastMonth.dailyRecords?.length) {
+        const lastDayRecord = lastMonth.dailyRecords.reduce((a, b) =>
+          a.day > b.day ? a : b
+        );
+        Object.entries(lastDayRecord.expensesByAction).forEach(([action, value]) => {
+          lastValuesFromPreviousYear[action] = Number(value);
+        });
+      }
+    }
     
-    const actionsToDisplay = Object.keys(lastDayRecord.expensesByAction || {});
+    const currentYearLastValues: { [action: string]: number } = {};
+    if (currentYearData.months?.length) {
+      const lastMonth = currentYearData.months.reduce((a, b) =>
+        a.month > b.month ? a : b
+      );
+      
+      if (lastMonth.dailyRecords?.length) {
+        const lastDay = lastMonth.dailyRecords.reduce((a, b) =>
+          a.day > b.day ? a : b
+        );
+        Object.entries(lastDay.expensesByAction).forEach(([action, value]) => {
+          currentYearLastValues[action] = Number(value);
+        });
+      }
+    }
+    
+    const actionsToDisplay = Object.entries(currentYearLastValues)
+      .filter(([action, value]) => {
+        const previous = lastValuesFromPreviousYear[action] || 0;
+        return value !== previous;
+      })
+      .map(([action]) => action);
+    
     const expensesByMonth: { [month: string]: any } = {};
-    const lastRecordedMonth: { [key: string]: number } = {};
-  
     for (let i = 0; i < 12; i++) {
       expensesByMonth[monthNames[i]] = { month: monthNames[i] };
     }
     
-    // Processar apenas os dados do ano selecionado
-    const yearData = ngoGrafic.expensesByAction.find(
-      (year) => year.year.toString() === selectedYear
-    );
+    const monthlyTotals: { [action: string]: number[] } = {};
+    actionsToDisplay.forEach((action) => {
+      monthlyTotals[action] = Array(12).fill(null);
+    });
     
-    if (yearData) {
-      yearData.months.forEach((monthData) => {
-        const monthIndex = monthData.month - 1;
-        const monthName = monthNames[monthIndex];
-        
-        monthData.dailyRecords.forEach((record) => {
-          Object.entries(record.expensesByAction).forEach(([action, value]) => {
-            if (!actionsToDisplay.includes(action)) return;
-            
-            if (!expensesByMonth[monthName][action]) {
-              expensesByMonth[monthName][action] = 0;
-            }
-            
-            expensesByMonth[monthName][action] += Number(value);
-            lastRecordedMonth[action] = monthIndex;
-          });
+    currentYearData.months.forEach((monthData) => {
+      const monthIndex = monthData.month - 1;
+      const dailySum: { [action: string]: number } = {};
+      
+      monthData.dailyRecords.forEach((record) => {
+        Object.entries(record.expensesByAction).forEach(([action, value]) => {
+          if (!actionsToDisplay.includes(action)) return;
+          dailySum[action] = (dailySum[action] || 0) + Number(value);
         });
       });
+      
+      Object.entries(dailySum).forEach(([action, total]) => {
+        monthlyTotals[action][monthIndex] = total;
+      });
+    });
+    
+    // Calcula a diferença mês a mês
+    const previousTotals: { [action: string]: number } = {};
+    actionsToDisplay.forEach((action) => {
+      previousTotals[action] = lastValuesFromPreviousYear[action] || 0;
+    });
+    
+    for (let i = 0; i < 12; i++) {
+      const monthName = monthNames[i];
+      actionsToDisplay.forEach((action) => {
+        const current = monthlyTotals[action][i];
+        if (current !== null && current !== undefined) {
+          const diff = current - previousTotals[action];
+          // Substitute negative values with 0
+          expensesByMonth[monthName][action] = diff < 0 ? 0 : diff;
+          previousTotals[action] = current;
+        }
+      });
     }
-  
-    Object.entries(expensesByMonth).forEach(([monthName, monthData], index) => {
+    
+    // Preeche os meses seguintes com 0 (depois do primeiro registro), e antes como null
+    const firstValidMonthIndex: { [key: string]: number } = {};
+    actionsToDisplay.forEach((action) => {
+      for (let i = 0; i < 12; i++) {
+        const monthName = monthNames[i];
+        if (expensesByMonth[monthName][action] !== undefined) {
+          firstValidMonthIndex[action] = i;
+          break;
+        }
+      }
+    });
+    
+    Object.entries(expensesByMonth).forEach(([monthName, monthData]) => {
       actionsToDisplay.forEach((action) => {
         if (!(action in monthData)) {
-          monthData[action] = index <= (lastRecordedMonth[action] || 0) ? 0 : null;
+          monthData[action] = 0;
         }
       });
     });
-  
+    
     const formattedData = Object.values(expensesByMonth);
     setData(formattedData);
-  
+    
     const initialVisibility: { [key: string]: boolean } = {};
     const newColors: { [key: string]: string } = {};
     const usedColors = new Set<string>();
-  
+    
     actionsToDisplay.forEach((action) => {
       initialVisibility[action] = true;
       if (!actionColors[action]) {
         newColors[action] = generateUniqueColor(usedColors);
       }
     });
-  
+    
     setVisibleLines(initialVisibility);
     setActionColors((prev) => ({ ...prev, ...newColors }));
     
@@ -193,7 +256,7 @@ export default function Balance() {
 
         <div className="flex justify-between items-center mb-16">
           <div className="text-left">
-            <p className="text-gray-500 text-xl">Total gasto</p>
+            <p className="text-gray-500 text-xl">Total gasto em todos os anos</p>
             <p className="text-4xl font-bold text-gray-800">
               {totalExpenses.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
@@ -261,7 +324,9 @@ export default function Balance() {
               <Tooltip
                 formatter={(value: any, name: string) => {
                   const truncated = name.length > 30 ? name.slice(0, 30) + "..." : name;
-                  return [`${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, truncated];
+                  // Ensure value is never negative when displayed
+                  const displayValue = value < 0 ? 0 : value;
+                  return [`${displayValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, truncated];
                 }}
                 labelFormatter={(label: string) => {
                   const index = monthNames.indexOf(label);

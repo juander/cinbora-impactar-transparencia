@@ -52,7 +52,6 @@ export default function Ongs() {
   return (
     <div>
       <div className="flex mt-10 justify-between max-md:hidden">
-        <FloatingHearts/>
         <div className="flex flex-col w-3/5 text-[#294BB6] p-12 max-xl:p-3">
           <h1 className="font-bold text-5xl max-lg:text-4xl max-md:text-3xl max-sm:text-xs text-[#294BB6]">PORTAL DA TRANSPARÊNCIA</h1>
 

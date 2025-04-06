@@ -198,7 +198,8 @@ export default function Balance() {
             const current = monthlyTotals[action][i];
             if (current !== null && current !== undefined) {
               const diff = current - previousTotals[action];
-              expensesByMonth[monthName][action] = diff;
+              // Substitute negative values with 0
+              expensesByMonth[monthName][action] = diff < 0 ? 0 : diff;
               previousTotals[action] = current;
             }
           });
@@ -390,7 +391,9 @@ export default function Balance() {
               <Tooltip
                 formatter={(value: any, name: string) => {
                   const truncated = name.length > 30 ? name.slice(0, 30) + "..." : name;
-                  return [`${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, truncated];
+                  // Ensure value is never negative when displayed
+                  const displayValue = value < 0 ? 0 : value;
+                  return [`${displayValue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, truncated];
                 }}
                 labelFormatter={(label: string) => {
                   const index = monthNames.indexOf(label);
