@@ -986,7 +986,7 @@ const handleSave = async () => {
               
               {modalTab === "detalhes" && (
                 <>
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="mt-6 grid grid-cols-2 gap-4">
                   {/* Campo de Título (Ocupa linha inteira) */}
                   <div id="titulo" className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700">Título {!editingSlide?.id && <span className="text-red-500">*</span>}</label>

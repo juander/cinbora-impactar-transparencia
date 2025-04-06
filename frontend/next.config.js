@@ -8,6 +8,8 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   basePath: '/cinboratransparecer',
+  assetPrefix: '/cinboratransparecer',
+  trailingSlash: false,
   swcMinify: true,
   // This will prevent static generation for routes that use search params
   // which resolves our build issues

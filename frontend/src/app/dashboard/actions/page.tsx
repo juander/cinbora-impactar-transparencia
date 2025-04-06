@@ -427,8 +427,8 @@ export default function DashboardAction() {
       <main className="p-4">
         
         <h1 title={action.name} className="text-4xl text-center m-auto w-[90%] font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis max-xl:text-3xl max-sm:text-xl">{action.name}</h1>
-        <CardContent className="relative p-0 min-w-84 roudend-xl">
-          <div className="relative z-10 bg-white mt-8 w-5/6 m-auto">
+        <CardContent className="relative p-0 min-w-80 roudend-xl">
+          <div className="relative z-10 bg-white mt-8 w-5/6 m-auto max-sm:w-full">
             <div className="relative">
               <div className="absolute right-4 top-6 flex space-x-2">
                 <button 
@@ -687,7 +687,7 @@ export default function DashboardAction() {
                   <input
                     id="arrecadadoAcao"
                     type="text"
-                    className="w-full mt-1 p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
+                    className="w-full mt-1 p-4 border border-gray-300 rounded-[16px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all max-sm:w-[200%]"
                     placeholder="Digite o valor"
                     value={editingAction.colected?.toString() || ""}
                     onChange={(e) => {

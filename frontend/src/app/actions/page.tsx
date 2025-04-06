@@ -55,10 +55,10 @@ export default function ActionDetail() {
         if (!action) return <p className="p-4">Carregando...</p>
 
         return (
-          <main>
+          <main className="p-4">
             <h1 title={action.name} className="text-4xl text-center font-bold mt-10 whitespace-nowrap overflow-hidden text-ellipsis w-[90%] m-auto max-xl:text-3xl max-sm:text-xl">{action.name}</h1>
             <CardContent className="relative p-0 min-w-84">
-              <div className="relative z-10 bg-white mt-20 w-5/6 m-auto">
+              <div className="relative z-10 bg-white mt-20 w-5/6 m-auto max-sm:w-full">
                 <div className="flex flex-col justify-between py-6 px-3 w-full border-solid border border-gray-200 rounded-xl shadow-lg mb-20 duration-300 ease-in hover:shadow-[#2BAFF150]">
                   <div>
                     <p title={action.type} className="inline-block text-xs font-semibold text-[#0056D2] bg-[#E9F2FF] px-3 py-1 rounded-lg uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[100%]">
@@ -163,7 +163,7 @@ export default function ActionDetail() {
           </main>
         )
       }}
-      </SearchParamsWrapper>
-    </Suspense>
-    )
+    </SearchParamsWrapper>
+  </Suspense>
+  )
 }

@@ -20,6 +20,9 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { useSearchParams } from "next/navigation";
+import InfoTooltipModal from "./HelpTooltip";
+import { HelpCircle, Target, UploadCloud } from "lucide-react";
+import { FiChevronDown } from "react-icons/fi";
 
 // Add TypeScript interfaces for API response
 interface DailyRecord {
@@ -252,7 +255,72 @@ export default function Balance() {
   return (
     <div className="flex justify-center py-10">
       <div className="w-[95%] max-w-[1400px]">
-        <h2 className="text-center font-bold text-5xl mb-16">Balanço de gastos</h2>
+        <div className="relative mb-16">
+          <h2 className="text-center font-bold text-5xl">Balanço de gastos</h2>
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <InfoTooltipModal>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700 text-[15px]">
+                <div className="group p-4 rounded-2xl hover:bg-[#F4F7FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <HelpCircle className="text-blue-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">O que é o Balanço de Gastos?</h3>
+                  </div>
+                  <p>É um painel visual que mostra quanto foi gasto pela ONG, com o quê e em qual mês.</p>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#F5FFF6] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <FiChevronDown className="text-green-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Filtros de Ação e Ano</h3>
+                  </div>
+                  <p>Você pode escolher quais categorias quer ver no gráfico e mudar o ano exibido.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all text-xs">
+                    <span className="inline-block bg-green-100 text-green-600 px-3 py-1 rounded-full">Ex: Alimentação - 2025</span>
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#FFF5F7] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <UploadCloud className="text-pink-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Total Gasto</h3>
+                  </div>
+                  <p>Logo abaixo do título, você verá quanto já foi gasto no total, atualizado automaticamente.</p>
+                  <div className="opacity-0 group-hover:opacity-100 mt-2 transition-all text-xs text-pink-500">
+                    Ex: R$ 12.500,00
+                  </div>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#F9F5FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <Target className="text-purple-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Gráfico de Linhas</h3>
+                  </div>
+                  <p>Mostra mês a mês quanto foi gasto em cada categoria com linhas coloridas e interativas.</p>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#E9F6FF] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <HelpCircle className="text-sky-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Tooltip no gráfico</h3>
+                  </div>
+                  <p>Ao passar o mouse sobre o gráfico, aparece uma caixinha com os valores exatos por mês e categoria.</p>
+                </div>
+
+                <div className="group p-4 rounded-2xl hover:bg-[#FFFCEB] transition-all border">
+                  <div className="flex items-center gap-3 mb-1">
+                    <FiChevronDown className="text-yellow-600 w-5 h-5" />
+                    <h3 className="font-semibold text-[#2E4049]">Legenda Colorida</h3>
+                  </div>
+                  <p>Logo abaixo do gráfico, você encontra a legenda com a cor de cada ação. Se o nome estiver cortado, é só passar o mouse.</p>
+                  <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs">Alimentação</span>
+                    <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs">Transporte</span>
+                  </div>
+                </div>
+              </div>
+            </InfoTooltipModal>
+          </div>
+        </div>
 
         <div className="flex justify-between items-center mb-16">
           <div className="text-left">

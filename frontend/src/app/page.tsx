@@ -73,7 +73,6 @@ export default function Ongs() {
       </div>
 
       <div className="hidden max-md:block">
-        <FloatingHearts/>
         <div className="flex flex-col items-center justify-center mt-10 mb-4">
           <h1 className="font-bold text-2xl mb-20 text-[#294BB6] max-sm:text-xl">PORTAL DA TRANSPARÊNCIA</h1>
           <Image

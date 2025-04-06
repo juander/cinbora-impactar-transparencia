@@ -36,9 +36,7 @@ WORKDIR /app
 # Copy only necessary files from build
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# Create public directory (this was missing)
-RUN mkdir -p public
+COPY --from=builder /app/public ./public
 
 # Set environment variables
 ENV NODE_ENV=production
