@@ -5,11 +5,14 @@ on:
     branches:
       - main
       - backend-cache
+      - transparencia-v1
+      - deploy
   pull_request:
     branches:
       - main
       - backend-cache
-
+      - transparencia-v1
+      - deploy
 jobs:
   test:
     runs-on: ubuntu-latest
