@@ -292,7 +292,7 @@ export default function Balance() {
                   <Target className="text-purple-600 w-5 h-5" />
                   <h3 className="font-semibold text-[#2E4049]">Gráfico de Linhas</h3>
                 </div>
-                <p>Mostra mês a mês quanto foi gasto em cada categoria com linhas coloridas e interativas.</p>
+                <p>Mostra mês a mês quanto foi gasto em cada ação com linhas coloridas e interativas.</p>
               </div>
 
               <div className="group p-4 rounded-2xl hover:bg-[#E9F6FF] transition-all border">

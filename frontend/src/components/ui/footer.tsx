@@ -22,8 +22,8 @@ export default function Footer() {
             <h3 className="font-bold text-2xl">Portal</h3>
             <ul className="space-y-4">
               {[
-                {text: "Início", href: "/#"},
-                {text: "Ongs", href: "/#searchOngs"}
+                {text: "Início", href: "/cinboratransparecer"},
+                {text: "Ongs", href: "/cinboratransparecer/#searchOngs"}
               ].map((item, index) => (
                 <li
                   key={index}
