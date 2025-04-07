@@ -285,13 +285,13 @@ export default function VisitorPage() {
                                           : ""
                                       }/actions?action_id=${slide.id}`}
                                       target="_blank"
-                                      className="w-2/12 h-full"
+                                      className="w-2/12 h-12"
                                     >
-                                      <div className="w-full rounded-full h-full bg-[#F2F4F7] flex justify-center cursor-pointer">
+                                      <div className="w-full h-full rounded-full bg-[#F2F4F7] flex justify-center items-center border border-[#c3d0e6] hover:bg-[#d6deec] transition-all shadow-sm cursor-pointer">
                                         <Image
-                                          className="w-6 h-10"
+                                          className="w-5 h-5"
                                           src={shareButton}
-                                          alt="share"
+                                          alt="Compartilhar no WhatsApp"
                                         />
                                       </div>
                                     </Link>

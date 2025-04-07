@@ -40,10 +40,10 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-8">
             <h3 className="font-bold text-2xl">Contato</h3>
             <p className="text-lg transition-transform duration-300 hover:scale-110">
-              Email: ouvidoria@recife.pe.gov.br
+              Email: cinboratransparecer@gmail.com
             </p>
             <p className="text-lg transition-transform duration-300 hover:scale-110">
-              Telefone: 0800 281 0040
+              Telefone: <a href="https://wa.me/5581984607815" target="_blank" rel="noopener noreferrer" className="hover:underline">(81) 98460-7815</a>
             </p>
           </div>
         </div>
