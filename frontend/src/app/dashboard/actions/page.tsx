@@ -413,7 +413,7 @@ export default function DashboardAction() {
       }
 
       toast.success("Ação deletada com sucesso!");
-      router.push("/cinboratransparecer/dashboard/ongs");
+      router.push("/dashboard/ongs"); // Não precisa do /cinboratransparecer
     } catch (error) {
       console.error(error);
       toast.error("Erro ao deletar a ação.");

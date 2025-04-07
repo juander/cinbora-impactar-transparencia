@@ -1,7 +1,7 @@
 services:
   # MongoDB 
   mongodb:
-    container_name: cinbora-mongodb
+    container_name: cinboratransparecer-mongodb
     image: mongo:7.0
     restart: always
     environment:
@@ -36,7 +36,7 @@ services:
       - app-network
       
   backend:
-    container_name: cinbora-backend
+    container_name: cinboratransparecer-backend
     build: 
       context: ./backend
       dockerfile: Dockerfile
