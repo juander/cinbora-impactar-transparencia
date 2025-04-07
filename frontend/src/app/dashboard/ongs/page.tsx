@@ -845,10 +845,10 @@ const handleSave = async () => {
                             >
                               TRANSPARÊNCIA
                             </Button>
-                            {/* ShareBn estilizado */}
-                            <Link className="w-2/12 h-full" href={`https://api.whatsapp.com/send?text=${window.location.origin}/actions?action_id=${String(slide.id)}`} target="_blank">
-                              <div className="w-full rounded-full h-full bg-[#F2F4F7] flex justify-center cursor-pointer">
-                                <Image className="w-6 h-10" src={shareButton} alt="share" />
+                            {/* ShareButton estilizado */}
+                            <Link className="w-2/12 h-12" href={`https://api.whatsapp.com/send?text=${window.location.origin}/actions?action_id=${String(slide.id)}`} target="_blank">
+                              <div className="w-full h-full rounded-full bg-[#F2F4F7] flex justify-center items-center border border-[#c3d0e6] hover:bg-[#d6deec] transition-all shadow-sm cursor-pointer">
+                                <Image className="w-5 h-5" src={shareButton} alt="Compartilhar no WhatsApp" />
                               </div>
                             </Link>
                           </div>
